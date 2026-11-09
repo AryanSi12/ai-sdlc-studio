@@ -7,15 +7,26 @@ import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 
 const STAGE_KEYS = ['requirements', 'design', 'development', 'testing', 'deployment']
 
-/** Desktop node centers in viewBox 1000×440 */
-const POS = {
-  requirements: { x: 90, y: 200 },
-  gate_design: { x: 270, y: 200 },
-  design: { x: 420, y: 200 },
-  development: { x: 580, y: 200 },
-  testing: { x: 740, y: 200 },
-  gate_release: { x: 880, y: 110 },
-  deployment: { x: 880, y: 300 },
+/** Order on the track: stages with gates between the stages they protect */
+const TRACK = ['requirements', 'design', 'gate_design', 'development', 'testing', 'gate_release', 'deployment']
+
+function layoutPositions(mobile) {
+  if (mobile) {
+    // Vertical stack — viewBox 320×820
+    const xs = 160
+    const start = 56
+    const gap = 108
+    const pos = {}
+    TRACK.forEach((id, i) => { pos[id] = { x: xs, y: start + i * gap } })
+    return { pos, vb: '0 0 320 820', failLabel: { x: 268, y: 430 } }
+  }
+  // Balanced horizontal track — viewBox 1120×340
+  const y = 150
+  const start = 80
+  const gap = 160
+  const pos = {}
+  TRACK.forEach((id, i) => { pos[id] = { x: start + i * gap, y } })
+  return { pos, vb: '0 0 1120 340', failLabel: { x: (pos.development.x + pos.testing.x) / 2, y: y + 118 } }
 }
 
 function stageState(stages, key) {
@@ -51,12 +62,12 @@ function Confetti({ show }) {
   )
 }
 
-function Node({ id, label, state, bot, gate, selected, onSelect, onHover, replayActive, reduced }) {
+function Node({ id, label, state, bot, gate, selected, onSelect, onHover, replayActive, reduced, pos }) {
   const isDone = state === 'done'
   const isActive = state === 'active' || state === 'clarifying' || replayActive
   const isFailed = state === 'failed'
   const hex = bot?.hex || '#5b5bd6'
-  const pos = POS[id]
+  if (!pos) return null
 
   return (
     <g transform={`translate(${pos.x}, ${pos.y})`} className="cursor-pointer" onClick={() => onSelect(id)} onMouseEnter={() => onHover?.(id)} onMouseLeave={() => onHover?.(null)}>
@@ -167,6 +178,17 @@ export default function PipelineGraph({ project, docs = [] }) {
   const [replayStep, setReplayStep] = useState(null) // null | 0..n
   const [drawer, setDrawer] = useState(null)
   const [burst, setBurst] = useState(false)
+  const [mobile, setMobile] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const on = () => setMobile(mq.matches)
+    on()
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+
+  const { pos: POS, vb, failLabel } = useMemo(() => layoutPositions(mobile), [mobile])
 
   const states = useMemo(() => {
     const m = {}
@@ -251,15 +273,29 @@ export default function PipelineGraph({ project, docs = [] }) {
     return releaseGateActive ? 'active' : releaseGateDone ? 'done' : 'pending'
   }
 
-  const edges = useMemo(() => ({
-    e1: curved(POS.requirements, POS.gate_design, -10),
-    e2: curved(POS.gate_design, POS.design, 10),
-    e3: curved(POS.design, POS.development, -8),
-    e4: curved(POS.development, POS.testing, 8),
-    e5: `M ${POS.testing.x} ${POS.testing.y} Q ${(POS.testing.x + POS.gate_release.x) / 2} ${POS.testing.y - 40} ${POS.gate_release.x} ${POS.gate_release.y}`,
-    e6: curved(POS.gate_release, POS.deployment, 0),
-    loop: `M ${POS.testing.x} ${POS.testing.y + 36} C ${POS.testing.x - 20} ${POS.testing.y + 110}, ${POS.development.x + 20} ${POS.development.y + 110}, ${POS.development.x} ${POS.development.y + 36}`,
-  }), [])
+  const edges = useMemo(() => {
+    if (mobile) {
+      const down = (a, b) => `M ${a.x} ${a.y + 36} L ${b.x} ${b.y - 36}`
+      return {
+        e1: down(POS.requirements, POS.design),
+        e2: down(POS.design, POS.gate_design),
+        e3: down(POS.gate_design, POS.development),
+        e4: down(POS.development, POS.testing),
+        e5: down(POS.testing, POS.gate_release),
+        e6: down(POS.gate_release, POS.deployment),
+        loop: `M ${POS.testing.x - 36} ${POS.testing.y} C ${POS.testing.x - 90} ${POS.testing.y}, ${POS.development.x - 90} ${POS.development.y}, ${POS.development.x - 36} ${POS.development.y}`,
+      }
+    }
+    return {
+      e1: curved(POS.requirements, POS.design, 0),
+      e2: curved(POS.design, POS.gate_design, 0),
+      e3: curved(POS.gate_design, POS.development, 0),
+      e4: curved(POS.development, POS.testing, 0),
+      e5: curved(POS.testing, POS.gate_release, 0),
+      e6: curved(POS.gate_release, POS.deployment, 0),
+      loop: `M ${POS.testing.x} ${POS.testing.y + 38} C ${POS.testing.x} ${POS.testing.y + 105}, ${POS.development.x} ${POS.development.y + 105}, ${POS.development.x} ${POS.development.y + 38}`,
+    }
+  }, [POS, mobile])
 
   function openDrawer(id) {
     setSelected(id)
@@ -320,7 +356,7 @@ export default function PipelineGraph({ project, docs = [] }) {
           </div>
         )}
 
-        <svg viewBox="0 0 1000 440" className="h-auto w-full min-h-[280px] sm:min-h-[420px]" role="img" aria-label="SDLC pipeline graph">
+        <svg viewBox={vb} className={`h-auto w-full ${mobile ? 'min-h-[640px]' : 'min-h-[300px] sm:min-h-[340px]'}`} role="img" aria-label="SDLC pipeline graph">
           <defs>
             <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0" />
@@ -333,22 +369,22 @@ export default function PipelineGraph({ project, docs = [] }) {
             </filter>
           </defs>
 
-          <FlowPath d={edges.e1} active={effectiveState('requirements') === 'active' || (effectiveState('requirements') === 'done' && gateState('design') === 'active')} done={effectiveState('requirements') === 'done'} reduced={reduced} />
-          <FlowPath d={edges.e2} active={gateState('design') === 'active'} done={gateState('design') === 'done'} reduced={reduced} />
-          <FlowPath d={edges.e3} active={effectiveState('design') === 'done' && effectiveState('development') !== 'pending'} done={effectiveState('development') !== 'pending' && effectiveState('design') === 'done'} reduced={reduced} />
+          <FlowPath d={edges.e1} active={effectiveState('requirements') === 'active' || (effectiveState('requirements') === 'done' && effectiveState('design') === 'active')} done={effectiveState('requirements') === 'done'} reduced={reduced} />
+          <FlowPath d={edges.e2} active={effectiveState('design') === 'done' && (gateState('design') === 'active' || gateState('design') === 'done')} done={gateState('design') === 'done'} reduced={reduced} />
+          <FlowPath d={edges.e3} active={gateState('design') === 'done' && effectiveState('development') !== 'pending'} done={effectiveState('development') !== 'pending' && gateState('design') === 'done'} reduced={reduced} />
           <FlowPath d={edges.e4} active={effectiveState('development') === 'active' || (effectiveState('development') === 'done' && effectiveState('testing') === 'active')} done={effectiveState('development') === 'done'} reduced={reduced} />
           <FlowPath d={edges.e5} active={effectiveState('testing') === 'done' || gateState('release') === 'active'} done={gateState('release') === 'done'} reduced={reduced} />
           <FlowPath d={edges.e6} active={gateState('release') === 'done' || effectiveState('deployment') === 'active'} done={effectiveState('deployment') === 'done'} reduced={reduced} />
           <FlowPath d={edges.loop} active={failLoopActive || (replayStep !== null && effectiveState('testing') === 'active')} done={false} fail reduced={reduced} />
-          <text x={(POS.testing.x + POS.development.x) / 2} y={POS.testing.y + 125} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700, fill: '#e11d48' }}>fail → Dev</text>
+          <text x={failLabel.x} y={failLabel.y} textAnchor="middle" style={{ fontSize: 11, fontWeight: 700, fill: '#e11d48' }}>fail → Dev</text>
 
-          <Node id="requirements" label="Requirements" state={effectiveState('requirements')} bot={botById('requirement_gatherer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="gate_design" label="Design gate" state={gateState('design')} bot={botById('orchestrator')} gate selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="design" label="Design" state={effectiveState('design')} bot={botById('designer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="development" label="Development" state={effectiveState('development')} bot={botById('developer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="testing" label="Testing" state={effectiveState('testing')} bot={botById('tester')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="gate_release" label="Release gate" state={gateState('release')} bot={botById('orchestrator')} gate selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
-          <Node id="deployment" label="Deployment" state={effectiveState('deployment')} bot={botById('deployer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} />
+          <Node id="requirements" label="Requirements" state={effectiveState('requirements')} bot={botById('requirement_gatherer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.requirements} />
+          <Node id="design" label="Design" state={effectiveState('design')} bot={botById('designer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.design} />
+          <Node id="gate_design" label="Design gate" state={gateState('design')} bot={botById('orchestrator')} gate selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.gate_design} />
+          <Node id="development" label="Development" state={effectiveState('development')} bot={botById('developer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.development} />
+          <Node id="testing" label="Testing" state={effectiveState('testing')} bot={botById('tester')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.testing} />
+          <Node id="gate_release" label="Release gate" state={gateState('release')} bot={botById('orchestrator')} gate selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.gate_release} />
+          <Node id="deployment" label="Deployment" state={effectiveState('deployment')} bot={botById('deployer')} selected={selected} onSelect={openDrawer} onHover={setHovered} reduced={reduced} pos={POS.deployment} />
         </svg>
 
         {/* hover tooltip */}
