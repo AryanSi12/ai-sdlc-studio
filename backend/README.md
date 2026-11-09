@@ -30,6 +30,7 @@ Health: `GET http://127.0.0.1:8000/health`
 | `DATABASE_URL` | `sqlite:///./ai_sdlc.db` | SQLite or Postgres URL |
 | `BOT_TOKEN` | `dev-bot-token-change-me` | Shared secret for `X-Bot-Token` on `POST /api/events` |
 | `ORCHESTRATOR_WEBHOOK_URL` | _(empty)_ | Optional Grok Bot webhook; logs if unset |
+| `ORCHESTRATOR_WEBHOOK_KEY` | _(empty)_ | Grok Bot webhook sender key (sent as Bearer + X-Automation-Key) |
 | `CORS_ORIGINS` | localhost Vite ports | Comma-separated allowed origins |
 
 ## Bot event example

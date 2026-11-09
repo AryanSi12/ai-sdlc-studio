@@ -20,9 +20,16 @@ def notify_orchestrator(event: str, project_id: str, payload: dict[str, Any] | N
     if not url:
         logger.info("orchestrator webhook unset; event=%s project_id=%s payload=%s", event, project_id, body["payload"])
         return
+    # Skip the orchestrator's own events so it doesn't wake itself.
+    if event == "event.posted" and (payload or {}).get("bot") == "orchestrator":
+        return
+    headers = {}
+    key = (settings.orchestrator_webhook_key or "").strip()
+    if key:
+        headers = {"Authorization": f"Bearer {key}", "X-Automation-Key": key}
     try:
-        with httpx.Client(timeout=10.0) as client:
-            resp = client.post(url, json=body)
+        with httpx.Client(timeout=8.0) as client:
+            resp = client.post(url, json=body, headers=headers)
             resp.raise_for_status()
             logger.info("orchestrator notified event=%s status=%s", event, resp.status_code)
     except Exception as exc:  # noqa: BLE001 — webhook failures must not break API

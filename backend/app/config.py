@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     mongodb_db_name: str = "ai_sdlc"
     bot_token: str = "dev-bot-token-change-me"
     orchestrator_webhook_url: str = ""
+    orchestrator_webhook_key: str = ""
     host: str = "127.0.0.1"
     port: int = 8000
     cors_origins: str = (
