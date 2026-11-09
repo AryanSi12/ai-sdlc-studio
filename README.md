@@ -109,3 +109,18 @@ cd frontend && npm run build
 ## Hosted (Render)
 
 `render.yaml` deploys a Python web service (serves API + built UI from `backend/static`) and a free Postgres database. Free Postgres on Render expires after 30 days unless upgraded.
+
+
+## Frontend on Vercel (Phase 2)
+
+Root directory: `frontend`. Framework preset: Vite.
+
+Environment (Production + Preview):
+
+```
+VITE_API_URL=https://ai-sdlc-studio.onrender.com
+```
+
+`frontend/vercel.json` rewrites all routes to `index.html` for the SPA.
+
+The Render backend already allows CORS via `CORS_ORIGINS=*` (or explicit origins + `https://*.vercel.app` / regex). Same-origin static under `backend/static` stays supported when `VITE_API_URL` is empty.

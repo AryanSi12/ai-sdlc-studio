@@ -19,12 +19,16 @@ settings = get_settings()
 
 app = FastAPI(title="AI SDLC Studio API", version="0.1.0")
 
+_cors_origins = settings.cors_origin_list or ["*"]
+_cors_star = _cors_origins == ["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origin_list or ["*"],
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    # Starlette forbids credentials with allow_origins=["*"]; API uses bearer/header auth anyway.
+    allow_credentials=not _cors_star,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=None if _cors_star else settings.cors_origin_regex,
 )
 
 app.include_router(projects.router)

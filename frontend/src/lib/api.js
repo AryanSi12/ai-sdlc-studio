@@ -1,3 +1,6 @@
+// VITE_API_URL: set on Vercel to https://ai-sdlc-studio.onrender.com.
+// Empty/unset in production (backend/static same-origin) → window.location.origin.
+// Dev fallback → local FastAPI.
 const API_URL = (
   import.meta.env.VITE_API_URL ||
   (import.meta.env.PROD && typeof window !== 'undefined' ? window.location.origin : 'http://127.0.0.1:8000')
