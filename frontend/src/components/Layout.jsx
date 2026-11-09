@@ -6,7 +6,7 @@ import { useApiHealth } from '../hooks/useApiHealth'
 import { getApiUrl } from '../lib/api'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 function breadcrumb(pathname) {
   if (pathname === '/') return [{ to: '/', label: 'New Run' }]
@@ -26,19 +26,16 @@ export default function Layout() {
   const reduced = usePrefersReducedMotion()
   const apiHost = getApiUrl() ? getApiUrl().replace(/^https?:\/\//, '') : 'same origin'
   const crumbs = breadcrumb(location.pathname)
-  const [paletteTick, setPaletteTick] = useState(0)
-
-  useEffect(() => {
-    // force remount hint only — palette listens globally
-  }, [paletteTick])
+  const [, setPaletteTick] = useState(0)
 
   return (
-    <div className="flex min-h-screen bg-canvas text-ink">
-      <div className="hidden md:flex">
+    <div className="flex h-dvh max-h-dvh overflow-hidden bg-canvas text-ink">
+      <div className="hidden h-full shrink-0 md:flex">
         <Sidebar />
       </div>
-      <main className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-zinc-200/80 bg-white/75 px-4 backdrop-blur-xl sm:px-8">
+      <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Pinned top bar — NOT inside the scroll container, so it never mid-page overlaps */}
+        <header className="relative z-40 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-zinc-200/90 bg-white/95 px-4 shadow-[0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-xl sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <nav aria-label="Breadcrumb" className="hidden items-center gap-1.5 text-xs text-zinc-500 sm:flex">
               {crumbs.map((c, i) => (
@@ -80,7 +77,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="flex gap-2 overflow-x-auto border-b border-zinc-200 bg-white/90 px-3 py-2 md:hidden" aria-label="Mobile navigation">
+        <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-zinc-200 bg-white px-3 py-2 md:hidden" aria-label="Mobile navigation">
           {[
             ['/', 'New'],
             ['/projects', 'Projects'],
@@ -101,7 +98,7 @@ export default function Layout() {
           ))}
         </div>
 
-        <div className="flex-1 overflow-auto p-4 sm:p-8">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

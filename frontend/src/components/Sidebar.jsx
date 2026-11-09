@@ -36,7 +36,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200/80 bg-white/90 backdrop-blur-xl">
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-zinc-200/80 bg-white/95 backdrop-blur-xl">
       <div className="flex items-center gap-3 border-b border-zinc-200/80 px-5 py-5">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-200/60">
           <Sparkles className="h-4 w-4 text-white" aria-hidden />
