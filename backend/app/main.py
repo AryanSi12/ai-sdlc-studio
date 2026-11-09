@@ -40,6 +40,11 @@ app.include_router(maintainer.router)
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+    try:
+        from seed import seed
+        seed()
+    except Exception:
+        logging.exception("seed on startup failed")
 
 
 @app.get("/health")
