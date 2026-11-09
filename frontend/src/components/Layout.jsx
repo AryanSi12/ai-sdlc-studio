@@ -5,7 +5,7 @@ import CommandPalette from './CommandPalette'
 import { useApiHealth } from '../hooks/useApiHealth'
 import { getApiUrl } from '../lib/api'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
-import { Search } from 'lucide-react'
+import { Search, FilePlus2, FolderKanban, Inbox, Activity } from 'lucide-react'
 import { useState } from 'react'
 
 function breadcrumb(pathname) {
@@ -77,28 +77,7 @@ export default function Layout() {
           </div>
         </header>
 
-        <div className="flex shrink-0 gap-2 overflow-x-auto border-b border-zinc-200 bg-white px-3 py-2 md:hidden" aria-label="Mobile navigation">
-          {[
-            ['/', 'New'],
-            ['/projects', 'Projects'],
-            ['/inbox', 'Inbox'],
-            ['/activity', 'Activity'],
-          ].map(([to, label]) => (
-            <Link
-              key={to}
-              to={to}
-              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition ${
-                location.pathname === to || (to !== '/' && location.pathname.startsWith(to))
-                  ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                  : 'border-zinc-200 text-zinc-600'
-              }`}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8">
+        <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 pb-24 sm:p-8 md:pb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -112,6 +91,36 @@ export default function Layout() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Mobile bottom tab bar — always reachable */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur-xl md:hidden"
+        aria-label="Mobile navigation"
+      >
+        <div className="mx-auto grid max-w-lg grid-cols-4 gap-1">
+          {[
+            ['/', 'New', FilePlus2],
+            ['/projects', 'Projects', FolderKanban],
+            ['/inbox', 'Inbox', Inbox],
+            ['/activity', 'Activity', Activity],
+          ].map(([to, label, Icon]) => {
+            const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to)
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex flex-col items-center gap-0.5 rounded-xl px-2 py-2 text-[11px] font-semibold transition ${
+                  active ? 'bg-indigo-50 text-indigo-700' : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800'
+                }`}
+              >
+                <Icon className="h-5 w-5" aria-hidden />
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+
       <CommandPalette />
     </div>
   )

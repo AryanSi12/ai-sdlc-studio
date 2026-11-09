@@ -34,6 +34,10 @@ export function getProject(id) {
   return request(`/api/projects/${id}`)
 }
 
+export function deleteProject(id) {
+  return request(`/api/projects/${id}`, { method: 'DELETE' })
+}
+
 export function createProjectFromFile({ file, name, description }) {
   const form = new FormData()
   if (file) form.append('spec_file', file)

@@ -30,6 +30,21 @@ def get_project_route(project_id: str, db: Database = Depends(get_db)) -> dict:
     return project_detail(db, project)
 
 
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(project_id: str, db: Database = Depends(get_db)) -> None:
+    """Remove a project and related documents (for throwaway/test cleanup)."""
+    project = get_project(db, project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    round_ids = [r["id"] for r in db.quiz_rounds.find({"project_id": project_id}, {"id": 1, "_id": 0})]
+    if round_ids:
+        db.quiz_questions.delete_many({"round_id": {"$in": round_ids}})
+        db.quiz_answers.delete_many({"round_id": {"$in": round_ids}})
+    for coll in ("quiz_rounds", "stages", "documents", "events", "approvals"):
+        db[coll].delete_many({"project_id": project_id})
+    db.projects.delete_one({"id": project_id})
+
+
 def _insert_project(db: Database, project: dict, *, requirements_status: str) -> dict:
     now = utcnow()
     project.setdefault("created_at", now)
