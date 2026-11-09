@@ -1,12 +1,9 @@
-"""Stage progression helpers for the SDLC pipeline."""
-
+"""Stage progression helpers for the SDLC pipeline (Mongo)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy.orm import Session
-
-from app.models import Project, Stage
+from pymongo.database import Database
 
 STAGE_ORDER = ["requirements", "design", "development", "testing", "deployment"]
 
@@ -41,56 +38,42 @@ def next_stage_name(current: str) -> str | None:
     return STAGE_ORDER[idx + 1]
 
 
-def get_stage(db: Session, project_id: str, name: str) -> Stage | None:
-    return (
-        db.query(Stage)
-        .filter(Stage.project_id == project_id, Stage.name == name)
-        .one_or_none()
-    )
+def get_stage(db: Database, project_id: str, name: str) -> dict | None:
+    return db.stages.find_one({"project_id": project_id, "name": name}, {"_id": 0})
 
 
-def mark_stage(db: Session, project_id: str, name: str, status: str) -> Stage | None:
+def mark_stage(db: Database, project_id: str, name: str, status: str) -> dict | None:
     stage = get_stage(db, project_id, name)
     if not stage:
         return None
-    stage.status = status
     now = utcnow()
-    if status == "active" and not stage.started_at:
-        stage.started_at = now
+    updates: dict = {"status": status}
+    if status in ("active", "clarifying") and not stage.get("started_at"):
+        updates["started_at"] = now
     if status in ("done", "failed"):
-        stage.ended_at = now
-    return stage
+        updates["ended_at"] = now
+    db.stages.update_one({"project_id": project_id, "name": name}, {"$set": updates})
+    return get_stage(db, project_id, name)
 
 
-def advance_after_design_approval(db: Session, project: Project) -> None:
-    mark_stage(db, project.id, "design", "done")
-    mark_stage(db, project.id, "development", "active")
-    project.current_stage = "development"
-    project.status = "running"
-    project.active_bot = "developer"
-    project.updated_at = utcnow()
+def create_stages(db: Database, project_id: str, *, requirements_status: str = "active") -> None:
+    from app.models import new_id
 
-
-def advance_after_release_approval(db: Session, project: Project) -> None:
-    mark_stage(db, project.id, "deployment", "done")
-    project.current_stage = "deployment"
-    project.status = "done"
-    project.active_bot = "deployer"
-    project.updated_at = utcnow()
-
-
-def reject_design(db: Session, project: Project) -> None:
-    mark_stage(db, project.id, "design", "active")
-    project.current_stage = "design"
-    project.status = "running"
-    project.active_bot = "designer"
-    project.updated_at = utcnow()
-
-
-def reject_release(db: Session, project: Project) -> None:
-    mark_stage(db, project.id, "deployment", "pending")
-    mark_stage(db, project.id, "testing", "active")
-    project.current_stage = "testing"
-    project.status = "running"
-    project.active_bot = "tester"
-    project.updated_at = utcnow()
+    docs = []
+    for idx, name in enumerate(STAGE_ORDER):
+        status = requirements_status if idx == 0 else "pending"
+        docs.append(
+            {
+                "id": new_id(),
+                "project_id": project_id,
+                "name": name,
+                "status": status,
+                "bot": STAGE_BOT[name],
+                "output_label": None,
+                "output_url": None,
+                "started_at": utcnow() if idx == 0 else None,
+                "ended_at": None,
+            }
+        )
+    if docs:
+        db.stages.insert_many(docs)

@@ -2,54 +2,44 @@ import os
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
 
-# Force test settings before app import
-os.environ["DATABASE_URL"] = "sqlite://"
+os.environ["MONGODB_URI"] = "mongomock://localhost"
+os.environ["MONGODB_DB_NAME"] = "ai_sdlc_test"
 os.environ["BOT_TOKEN"] = "test-bot-token"
 os.environ["ORCHESTRATOR_WEBHOOK_URL"] = ""
 
-from app.database import Base, get_db  # noqa: E402
+from app.config import get_settings  # noqa: E402
+
+get_settings.cache_clear()
+
+from app.database import get_client, get_db, init_db, reset_client_cache  # noqa: E402
 from app.main import app  # noqa: E402
-from app.models import Bot  # noqa: E402
+from app.models import BOTS_SEED  # noqa: E402
+from seed import seed  # noqa: E402
 
 
 @pytest.fixture()
 def client():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        future=True,
-    )
-    TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, future=True)
-    Base.metadata.create_all(bind=engine)
-
-    db = TestingSessionLocal()
-    for bot_id, name, role in [
-        ("orchestrator", "Orchestrator", "Manager"),
-        ("requirement_gatherer", "Requirement Gatherer", "Requirements"),
-        ("designer", "Designer", "Architecture"),
-        ("developer", "Developer", "Implementation"),
-        ("tester", "Tester", "QA"),
-        ("deployer", "Deployer", "Release"),
-        ("maintainer", "Maintainer", "Existing repos"),
-    ]:
-        db.add(Bot(id=bot_id, name=name, role=role, status="idle", note=""))
-    db.commit()
-    db.close()
+    reset_client_cache()
+    get_settings.cache_clear()
+    os.environ["MONGODB_URI"] = "mongomock://localhost"
+    os.environ["MONGODB_DB_NAME"] = "ai_sdlc_test"
+    reset_client_cache()
+    client = get_client()
+    # Drop all collections for isolation
+    db = client["ai_sdlc_test"]
+    for name in db.list_collection_names():
+        db.drop_collection(name)
+    init_db()
+    seed()
 
     def override_get_db():
-        session = TestingSessionLocal()
-        try:
-            yield session
-        finally:
-            session.close()
+        yield client["ai_sdlc_test"]
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=engine)
+    for name in db.list_collection_names():
+        db.drop_collection(name)
+    reset_client_cache()

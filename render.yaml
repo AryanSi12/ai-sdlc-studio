@@ -9,19 +9,13 @@ services:
       # frontend static should already be committed under backend/static
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: ai-sdlc-db
-          property: connectionString
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB_NAME
+        value: ai_sdlc
       - key: BOT_TOKEN
         generateValue: true
       - key: CORS_ORIGINS
         value: "*"
       - key: PYTHON_VERSION
         value: "3.12.8"
-
-databases:
-  - name: ai-sdlc-db
-    plan: free
-    databaseName: ai_sdlc
-    user: ai_sdlc

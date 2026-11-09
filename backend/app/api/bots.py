@@ -1,13 +1,14 @@
+from __future__ import annotations
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from pymongo.database import Database
 
 from app.database import get_db
-from app.models import Bot
 from app.schemas.schemas import BotOut
 
 router = APIRouter(prefix="/api/bots", tags=["bots"])
 
 
 @router.get("", response_model=list[BotOut])
-def list_bots(db: Session = Depends(get_db)) -> list[Bot]:
-    return db.query(Bot).order_by(Bot.id).all()
+def list_bots(db: Database = Depends(get_db)) -> list[dict]:
+    return list(db.bots.find({}, {"_id": 0}).sort("id", 1))

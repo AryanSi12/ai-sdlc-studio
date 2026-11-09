@@ -1,71 +1,75 @@
 #!/usr/bin/env python3
-"""Import a JSON export (e.g. Tiny Todo) into a hosted DATABASE_URL (Postgres or SQLite)."""
+"""Import a JSON export (e.g. Tiny Todo) into MONGODB_URI (Atlas or local)."""
 from __future__ import annotations
 
 import argparse
 import json
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 
+def _parse(v):
+    if isinstance(v, str) and ("T" in v or v.endswith("Z")):
+        try:
+            return datetime.fromisoformat(v.replace("Z", "+00:00"))
+        except ValueError:
+            return v
+    return v
+
+
+def _clean(row: dict) -> dict:
+    return {k: _parse(v) for k, v in row.items() if k != "_id"}
+
+
 def main() -> int:
-    p = argparse.ArgumentParser(description="Import export JSON into DATABASE_URL")
+    p = argparse.ArgumentParser(description="Import export JSON into MongoDB")
     p.add_argument("input", help="Path to export JSON")
-    p.add_argument("--database-url", default=os.environ.get("DATABASE_URL"), help="Target DB URL (required)")
+    p.add_argument("--mongodb-uri", default=os.environ.get("MONGODB_URI"), help="Target Mongo URI")
+    p.add_argument("--db-name", default=os.environ.get("MONGODB_DB_NAME", "ai_sdlc"))
     args = p.parse_args()
-    if not args.database_url:
-        print("Set --database-url or DATABASE_URL", file=sys.stderr)
+    if not args.mongodb_uri:
+        print("Set --mongodb-uri or MONGODB_URI", file=sys.stderr)
         return 1
 
-    os.environ["DATABASE_URL"] = args.database_url
+    os.environ["MONGODB_URI"] = args.mongodb_uri
+    os.environ["MONGODB_DB_NAME"] = args.db_name
     from app.config import get_settings
     get_settings.cache_clear()
+    from app.database import get_database, init_db, reset_client_cache
 
-    # Re-bind engine for this process
-    import app.database as dbmod
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    from app.database import Base, _normalize_db_url
-    from app import models  # noqa: F401
-    from app.models import Bot, Project, Stage, Approval, Event, Document
-
-    url = _normalize_db_url(args.database_url)
-    engine = create_engine(url, future=True)
-    Base.metadata.create_all(bind=engine)
-    Session = sessionmaker(bind=engine, future=True)
+    reset_client_cache()
+    init_db()
+    db = get_database()
     data = json.loads(Path(args.input).read_text())
     if "project" in data and "projects" not in data:
         data["projects"] = [data["project"]]
 
-    def upsert(session, model, row: dict, skip=()):
-        obj = session.get(model, row["id"])
-        clean = {k: v for k, v in row.items() if k not in skip and hasattr(model, k)}
-        if obj is None:
-            session.add(model(**clean))
-        else:
-            for k, v in clean.items():
-                if k != "id":
-                    setattr(obj, k, v)
-
-    with Session() as session:
-        for row in data.get("bots") or []:
-            upsert(session, Bot, row)
-        for row in data.get("projects") or []:
-            upsert(session, Project, row)
-        for row in data.get("stages") or []:
-            upsert(session, Stage, row)
-        for row in data.get("approvals") or []:
-            upsert(session, Approval, row)
-        for row in data.get("events") or []:
-            upsert(session, Event, row)
-        for row in data.get("documents") or []:
-            upsert(session, Document, row)
-        session.commit()
-    print(f"Imported {len(data.get('projects') or [])} projects into {url.split('@')[-1]}")
+    collections = {
+        "bots": data.get("bots") or [],
+        "projects": data.get("projects") or [],
+        "stages": data.get("stages") or [],
+        "approvals": data.get("approvals") or [],
+        "events": data.get("events") or [],
+        "documents": data.get("documents") or [],
+        "quiz_rounds": data.get("quiz_rounds") or [],
+        "quiz_questions": data.get("quiz_questions") or [],
+        "quiz_answers": data.get("quiz_answers") or [],
+    }
+    for coll, rows in collections.items():
+        for row in rows:
+            clean = _clean(row)
+            if "id" not in clean:
+                continue
+            db[coll].update_one({"id": clean["id"]}, {"$set": clean}, upsert=True)
+    print(
+        f"Imported {len(collections['projects'])} projects, "
+        f"{len(collections['documents'])} docs into {args.db_name}"
+    )
     return 0
 
 

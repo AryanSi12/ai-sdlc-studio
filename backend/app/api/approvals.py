@@ -1,126 +1,92 @@
 from __future__ import annotations
 
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session, joinedload
+from pymongo.database import Database
 
 from app.database import get_db
-from app.models import Approval, Event, Project
+from app.models import utcnow
 from app.schemas.schemas import ApprovalDecision, ApprovalOut
+from app.serialize import get_project
 from app.services.orchestrator import notify_orchestrator
-from app.services.pipeline import (
-    advance_after_design_approval,
-    advance_after_release_approval,
-    reject_design,
-    reject_release,
-    utcnow,
-)
+from app.services.pipeline import STAGE_ORDER, mark_stage, next_stage_name
 from app.services.ws_hub import schedule_broadcast
 
 router = APIRouter(prefix="/api/approvals", tags=["approvals"])
 
 
-def _to_out(a: Approval) -> ApprovalOut:
-    return ApprovalOut(
-        id=a.id,
-        project_id=a.project_id,
-        gate=a.gate,
-        status=a.status,
-        summary=a.summary,
-        comment=a.comment,
-        decided_by=a.decided_by,
-        created_at=a.created_at,
-        decided_at=a.decided_at,
-        project_name=a.project.name if a.project else None,
-        project_stage=a.project.current_stage if a.project else None,
-    )
-
-
 @router.get("", response_model=list[ApprovalOut])
-def list_approvals(
-    status: str | None = Query(default=None),
-    db: Session = Depends(get_db),
-) -> list[ApprovalOut]:
-    q = db.query(Approval).options(joinedload(Approval.project)).order_by(Approval.created_at.desc())
+def list_approvals(status: str | None = Query(default=None), db: Database = Depends(get_db)) -> list[dict]:
+    q: dict = {}
     if status:
-        q = q.filter(Approval.status == status)
-    return [_to_out(a) for a in q.all()]
+        q["status"] = status
+    rows = list(db.approvals.find(q, {"_id": 0}).sort("created_at", -1).limit(100))
+    projects = {p["id"]: p for p in db.projects.find({}, {"_id": 0, "id": 1, "name": 1, "current_stage": 1})}
+    for a in rows:
+        p = projects.get(a["project_id"]) or {}
+        a["project_name"] = p.get("name")
+        a["project_stage"] = p.get("current_stage")
+    return rows
 
 
 @router.post("/{approval_id}", response_model=ApprovalOut)
-def decide_approval(
-    approval_id: str,
-    body: ApprovalDecision,
-    db: Session = Depends(get_db),
-) -> ApprovalOut:
-    approval = (
-        db.query(Approval)
-        .options(joinedload(Approval.project))
-        .filter(Approval.id == approval_id)
-        .one_or_none()
-    )
+def decide(approval_id: str, body: ApprovalDecision, db: Database = Depends(get_db)) -> dict:
+    approval = db.approvals.find_one({"id": approval_id}, {"_id": 0})
     if not approval:
         raise HTTPException(status_code=404, detail="Approval not found")
-    if approval.status != "pending":
-        raise HTTPException(status_code=400, detail=f"Approval already {approval.status}")
-
-    project = approval.project
+    if approval.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Approval already decided")
+    project = get_project(db, approval["project_id"])
     if not project:
-        project = db.query(Project).filter(Project.id == approval.project_id).one()
+        raise HTTPException(status_code=404, detail="Project not found")
 
-    approval.status = body.decision
-    approval.comment = body.comment
-    approval.decided_by = body.decided_by
-    approval.decided_at = utcnow()
-
-    if body.decision == "approved":
-        if approval.gate == "design":
-            advance_after_design_approval(db, project)
-        elif approval.gate == "release":
-            advance_after_release_approval(db, project)
-        action = f"Approved {approval.gate} gate"
-        reason = body.comment or "Human approved"
-    else:
-        if approval.gate == "design":
-            reject_design(db, project)
-        elif approval.gate == "release":
-            reject_release(db, project)
-        action = f"Rejected {approval.gate} gate"
-        reason = body.comment or "Human rejected"
-
-    db.add(
-        Event(
-            id=str(uuid.uuid4()),
-            project_id=project.id,
-            bot="orchestrator",
-            action=action,
-            details=f"approval_id={approval.id}",
-            reason=reason,
-        )
-    )
-    db.commit()
-    db.refresh(approval)
-
-    notify_orchestrator(
-        f"approval.{body.decision}",
-        project.id,
-        {"approval_id": approval.id, "gate": approval.gate, "comment": body.comment},
-    )
-    schedule_broadcast(
-        project.id,
+    now = utcnow()
+    db.approvals.update_one(
+        {"id": approval_id},
         {
-            "type": f"approval.{body.decision}",
-            "project_id": project.id,
-            "approval_id": approval.id,
-            "gate": approval.gate,
+            "$set": {
+                "status": body.decision,
+                "comment": body.comment,
+                "decided_by": body.decided_by,
+                "decided_at": now,
+            }
         },
     )
-    # reload with project
-    approval = (
-        db.query(Approval)
-        .options(joinedload(Approval.project))
-        .filter(Approval.id == approval_id)
-        .one()
+    updates: dict = {"updated_at": now, "status": "running"}
+    if body.decision == "approved":
+        # advance past the gate stage
+        gate_stage = "design" if approval["gate"] == "design" else "deployment"
+        mark_stage(db, project["id"], gate_stage, "done")
+        nxt = next_stage_name(gate_stage)
+        if nxt:
+            mark_stage(db, project["id"], nxt, "active")
+            updates["current_stage"] = nxt
+            # map next bot
+            from app.services.pipeline import STAGE_BOT
+
+            updates["active_bot"] = STAGE_BOT.get(nxt, "orchestrator")
+        else:
+            updates["status"] = "done"
+            updates["active_bot"] = "orchestrator"
+    else:
+        # Send back to the gate stage for revision
+        gate_stage = "design" if approval["gate"] == "design" else "deployment"
+        mark_stage(db, project["id"], gate_stage, "active")
+        updates["current_stage"] = gate_stage
+        from app.services.pipeline import STAGE_BOT
+        updates["active_bot"] = STAGE_BOT.get(gate_stage, "orchestrator")
+        updates["status"] = "running"
+
+    db.projects.update_one({"id": project["id"]}, {"$set": updates})
+    approval = db.approvals.find_one({"id": approval_id}, {"_id": 0})
+    approval["project_name"] = project["name"]
+    approval["project_stage"] = updates.get("current_stage", project.get("current_stage"))
+    notify_orchestrator(
+        "approval.decided",
+        project["id"],
+        {"approval_id": approval_id, "decision": body.decision},
     )
-    return _to_out(approval)
+    schedule_broadcast(
+        project["id"],
+        {"type": "approval.decided", "project_id": project["id"], "approval_id": approval_id},
+    )
+    return approval
