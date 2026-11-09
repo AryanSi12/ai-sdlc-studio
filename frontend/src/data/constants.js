@@ -7,7 +7,10 @@ export const BOTS = [
     hex: '#7c3aed',
     emoji: '🎯',
     image: '/bots/orchestrator.svg',
+    scene: '/scenes/orchestrator.jpg',
     blurb: 'Routes work across specialists, opens approval gates, and keeps the pipeline moving.',
+    capabilities: ['Assigns the right specialist at each stage', 'Opens design & release approval gates', 'Tracks handoffs and retries across bots'],
+    io: { input: 'Project intent', output: 'Stage plan' },
   },
   {
     id: 'requirement_gatherer',
@@ -17,7 +20,10 @@ export const BOTS = [
     hex: '#0284c7',
     emoji: '📋',
     image: '/bots/requirement_gatherer.svg',
+    scene: '/scenes/requirement_gatherer.jpg',
     blurb: 'Turns ideas into crisp requirements — quizzes you, then drafts the PRD.',
+    capabilities: ['Clarifying quiz rounds', 'Writes a full requirements doc', 'Extracts stories & acceptance criteria'],
+    io: { input: 'Idea or .md spec', output: 'Requirements doc' },
   },
   {
     id: 'designer',
@@ -27,7 +33,10 @@ export const BOTS = [
     hex: '#c026d3',
     emoji: '✏️',
     image: '/bots/designer.svg',
+    scene: '/scenes/designer.jpg',
     blurb: 'Shapes architecture, APIs, and UX flows. Pauses for your design approval.',
+    capabilities: ['System & API design', 'UX flow sketches', 'Human design-approval gate'],
+    io: { input: 'Requirements', output: 'Design doc' },
   },
   {
     id: 'developer',
@@ -37,7 +46,10 @@ export const BOTS = [
     hex: '#059669',
     emoji: '💻',
     image: '/bots/developer.svg',
+    scene: '/scenes/developer.jpg',
     blurb: 'Implements the design into code and opens pull requests.',
+    capabilities: ['Implements features from design', 'Opens PRs on GitHub', 'Receives fail-loop fixes from Tester'],
+    io: { input: 'Design', output: 'Code / PR' },
   },
   {
     id: 'tester',
@@ -47,7 +59,10 @@ export const BOTS = [
     hex: '#d97706',
     emoji: '🧪',
     image: '/bots/tester.svg',
+    scene: '/scenes/tester.jpg',
     blurb: 'Runs tests and loops failures back to Development until green.',
+    capabilities: ['Runs automated test suites', 'Writes test reports', 'Loops failures back to Developer'],
+    io: { input: 'Build', output: 'Test report' },
   },
   {
     id: 'deployer',
@@ -57,7 +72,10 @@ export const BOTS = [
     hex: '#e11d48',
     emoji: '🚀',
     image: '/bots/deployer.svg',
+    scene: '/scenes/deployer.jpg',
     blurb: 'Ships to production after your release approval — live URL ready.',
+    capabilities: ['Release approval gate', 'Deploys to hosting', 'Publishes live URL'],
+    io: { input: 'Green build', output: 'Live URL' },
   },
   {
     id: 'maintainer',
@@ -67,7 +85,10 @@ export const BOTS = [
     hex: '#0891b2',
     emoji: '🔧',
     image: '/bots/maintainer.svg',
+    scene: '/scenes/maintainer.jpg',
     blurb: 'Scans existing repos first — health, issues, then hands off into the pipeline.',
+    capabilities: ['Repo health score', 'Issue & debt scan', 'Hands change into the pipeline'],
+    io: { input: 'Repo URL', output: 'Health report' },
   },
 ]
 
@@ -89,6 +110,16 @@ export const STAGE_BOT = {
   deployment: 'deployer',
 }
 
+export const DOC_KIND_LABEL = {
+  requirements: 'Requirements',
+  design: 'Design',
+  test_report: 'Test report',
+  test: 'Test report',
+  deployment: 'Deployment',
+  maintainer: 'Maintainer report',
+  notes: 'Notes',
+}
+
 export const botColorClasses = {
   violet: { bg: 'bg-violet-50', text: 'text-violet-700', border: 'border-violet-200', dot: 'bg-violet-500', ring: 'ring-violet-200' },
   sky: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', dot: 'bg-sky-500', ring: 'ring-sky-200' },
@@ -108,7 +139,10 @@ export function botById(id) {
     hex: '#7c3aed',
     emoji: '🤖',
     image: '/bots/orchestrator.svg',
+    scene: '/scenes/orchestrator.jpg',
     blurb: '',
+    capabilities: [],
+    io: { input: '—', output: '—' },
   }
 }
 
@@ -142,4 +176,21 @@ export function stagesToProgress(stages = []) {
     else progress[label] = 'pending'
   }
   return progress
+}
+
+export function friendlyOutputLabel(stage) {
+  if (!stage) return '—'
+  if (stage.output_label) return stage.output_label
+  const defaults = {
+    requirements: 'Requirements document',
+    design: 'Design document',
+    development: 'Code / pull request',
+    testing: 'Test report',
+    deployment: 'Live deployment',
+  }
+  return defaults[stage.name] || STAGE_UI[stage.name] || 'Output'
+}
+
+export function isInternalDocPath(href) {
+  return typeof href === 'string' && href.startsWith('/projects/')
 }

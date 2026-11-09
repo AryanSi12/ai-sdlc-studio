@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { botById, formatTime, STAGE_UI } from '../data/constants'
+import { botById, formatTime, STAGE_UI, DOC_KIND_LABEL, friendlyOutputLabel, isInternalDocPath } from '../data/constants'
 import { getLatestQuiz, getProject, listDocuments, projectWsUrl, getMaintainer } from '../lib/api'
 import StatusBadge from '../components/StatusBadge'
 import { PageSkeleton } from '../components/Skeleton'
@@ -26,21 +26,36 @@ const OUTPUT_ICONS = {
   requirements: FileText, design: FileText, development: GitPullRequest, testing: FlaskConical, deployment: Globe,
 }
 
-function buildOutputs(stages = []) {
+function buildOutputs(stages = [], docs = []) {
   const byName = Object.fromEntries(stages.map((s) => [s.name, s]))
-  const defaults = {
-    requirements: 'Requirements', design: 'Design', development: 'Code / PR',
-    testing: 'Test report', deployment: 'Live URL',
-  }
   return ['requirements', 'design', 'development', 'testing', 'deployment'].map((name) => {
     const s = byName[name]
-    return {
-      key: name,
-      label: s?.output_label || defaults[name],
-      href: s?.output_url || null,
-      meta: s?.output_url || (s?.status === 'done' ? 'Complete' : s?.status === 'active' || s?.status === 'clarifying' ? 'In progress' : 'Not started'),
-      status: s?.status,
+    const label = friendlyOutputLabel(s || { name })
+    const href = s?.output_url || null
+    let meta = 'Not started'
+    if (s?.status === 'done') meta = 'Complete'
+    else if (s?.status === 'active' || s?.status === 'clarifying') meta = 'In progress'
+    // Prefer matching doc title for internal links
+    let displayHref = href
+    let docTitle = null
+    if (isInternalDocPath(href)) {
+      const docId = href.split('/docs/')[1]
+      const doc = docs.find((d) => d.id === docId)
+      if (doc) {
+        docTitle = doc.title
+        meta = `${DOC_KIND_LABEL[doc.kind] || doc.kind} · ${formatTime(doc.created_at)}`
+      } else {
+        meta = 'Document'
+      }
+      displayHref = href // keep for Link, but we never show raw path in UI
+    } else if (href && href.startsWith('http')) {
+      try {
+        meta = new URL(href).hostname
+      } catch {
+        meta = 'External link'
+      }
     }
+    return { key: name, label: docTitle || label, href: displayHref, meta, status: s?.status, botId: name === 'development' ? 'developer' : name === 'requirements' ? 'requirement_gatherer' : name === 'design' ? 'designer' : name === 'testing' ? 'tester' : 'deployer' }
   })
 }
 
@@ -109,21 +124,17 @@ export default function ProjectDetail() {
   if (!project) return <PageSkeleton />
 
   const active = botById(project.active_bot)
-  const outputs = buildOutputs(project.stages)
+  const outputs = buildOutputs(project.stages, docs)
   const isDone = project.status === 'done'
-  const nextCta = quiz?.status === 'open'
-    ? { label: 'Answer clarifying quiz', href: null, scroll: 'quiz' }
-    : null
+  const nextCta = quiz?.status === 'open' ? { label: 'Answer clarifying quiz' } : null
   const doneCount = (project.stages || []).filter((s) => s.status === 'done').length
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <Link to="/projects" className="text-xs font-medium text-zinc-500 transition hover:text-indigo-600">Projects</Link>
-            <span className="text-zinc-300">/</span>
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{project.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">{project.name}</h1>
             <StatusBadge status={project.status} />
             {live && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
@@ -169,40 +180,28 @@ export default function ProjectDetail() {
               className="rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50/40 p-5 shadow-sm">
               <div className="text-sm font-semibold text-emerald-800">Pipeline complete</div>
               <p className="mt-1 text-sm text-emerald-700/80">All stages finished. Repo and live deployment are ready.</p>
-              <div className="mt-3 flex flex-wrap gap-3 text-sm">
-                {project.repo_url && <a className="font-medium text-indigo-600 hover:underline" href={project.repo_url} target="_blank" rel="noreferrer">{project.repo_url}</a>}
-                {outputs.find((o) => o.key === 'deployment')?.href && (
-                  <a className="font-medium text-indigo-600 hover:underline" href={outputs.find((o) => o.key === 'deployment').href} target="_blank" rel="noreferrer">
-                    {outputs.find((o) => o.key === 'deployment').href}
-                  </a>
-                )}
-              </div>
             </motion.div>
           )}
 
-          <section className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <section className="rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm sm:p-5">
+            <div className="mb-3 flex items-end justify-between gap-3 px-1">
               <div className="text-xs text-zinc-400">
-                <span className="text-2xl font-semibold tabular-nums text-zinc-900">
-                  <CountUp value={doneCount} />
-                </span>
+                <span className="text-2xl font-semibold tabular-nums text-zinc-900"><CountUp value={doneCount} /></span>
                 <span className="ml-1">/ {project.stages?.length || 5} stages done</span>
               </div>
             </div>
-            <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-zinc-100" aria-label="Loading pipeline" />}>
-              <PipelineGraph project={project} />
+            <Suspense fallback={<div className="h-[420px] animate-pulse rounded-2xl bg-zinc-100" aria-label="Loading pipeline" />}>
+              <PipelineGraph project={project} docs={docs} />
             </Suspense>
           </section>
 
           {quiz?.status === 'open' && (
-            <div id="quiz">
-              <QuizWizard projectId={project.id} quiz={quiz} onDone={load} />
-            </div>
+            <div id="quiz"><QuizWizard projectId={project.id} quiz={quiz} onDone={load} /></div>
           )}
 
           {!isDone && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <section className="glass rounded-3xl p-5">
+              <section className="glass-deep rounded-3xl p-5">
                 <div className="text-xs font-semibold uppercase tracking-wider text-indigo-600">Active bot</div>
                 <div className="mt-3 flex items-center gap-3">
                   <img src={active?.image} alt="" className="h-12 w-12 rounded-2xl shadow-sm ring-1 ring-indigo-100" width={48} height={48} />
@@ -235,21 +234,34 @@ export default function ProjectDetail() {
             <ul className="divide-y divide-zinc-100">
               {outputs.map((out) => {
                 const Icon = OUTPUT_ICONS[out.key] || FileText
-                const internal = out.href?.startsWith('/projects/')
+                const bot = botById(out.botId)
+                const internal = isInternalDocPath(out.href)
                 return (
                   <li key={out.key} className="flex items-center justify-between gap-3 py-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 ring-1 ring-zinc-200"><Icon className="h-4 w-4" /></div>
+                      <div className="relative">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600 ring-1 ring-zinc-200"><Icon className="h-4 w-4" /></div>
+                        <img src={bot.image} alt="" className="absolute -bottom-1 -right-1 h-5 w-5 rounded-md ring-2 ring-white" width={20} height={20} />
+                      </div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium text-zinc-800">{out.label}</div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-zinc-800">{out.label}</span>
+                          <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                            {STAGE_UI[out.key]}
+                          </span>
+                        </div>
                         <div className="truncate text-xs text-zinc-500">{out.meta}</div>
                       </div>
                     </div>
                     {out.href ? (
                       internal ? (
-                        <Link to={out.href} className="rounded-lg p-1.5 text-indigo-600 transition hover:bg-indigo-50"><ExternalLink className="h-4 w-4" /></Link>
+                        <Link to={out.href} className="rounded-lg p-1.5 text-indigo-600 transition hover:bg-indigo-50" aria-label={`Open ${out.label}`}>
+                          <ExternalLink className="h-4 w-4" />
+                        </Link>
                       ) : (
-                        <a href={out.href} target="_blank" rel="noreferrer" className="rounded-lg p-1.5 text-indigo-600 transition hover:bg-indigo-50"><ExternalLink className="h-4 w-4" /></a>
+                        <a href={out.href} target="_blank" rel="noreferrer" className="rounded-lg p-1.5 text-indigo-600 transition hover:bg-indigo-50" aria-label={`Open ${out.label}`}>
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
                       )
                     ) : <span className="text-xs text-zinc-300">—</span>}
                   </li>
@@ -266,15 +278,27 @@ export default function ProjectDetail() {
             <EmptyState title="No documents yet" description="When bots upload requirements, design, or reports, they appear here." />
           ) : (
             <ul className="divide-y divide-zinc-100">
-              {docs.map((d) => (
-                <li key={d.id} className="flex items-center justify-between gap-3 py-3">
-                  <div>
-                    <div className="text-sm font-medium text-zinc-900">{d.title}</div>
-                    <div className="text-xs text-zinc-500">{d.kind.replace('_', ' ')} · {formatTime(d.created_at)}</div>
-                  </div>
-                  <Link to={`/projects/${id}/docs/${d.id}`} className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500">Open</Link>
-                </li>
-              ))}
+              {docs.map((d) => {
+                const bot = botById(d.created_by_bot)
+                return (
+                  <li key={d.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="flex items-center gap-3">
+                      <img src={bot.image} alt="" className="h-9 w-9 rounded-xl ring-1 ring-zinc-200" />
+                      <div>
+                        <div className="text-sm font-medium text-zinc-900">{d.title}</div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                          <span className="rounded-full bg-zinc-50 px-2 py-0.5 font-semibold uppercase tracking-wide text-zinc-500 ring-1 ring-zinc-200">
+                            {DOC_KIND_LABEL[d.kind] || d.kind.replace('_', ' ')}
+                          </span>
+                          <span>{bot.name}</span>
+                          <span>· {formatTime(d.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Link to={`/projects/${id}/docs/${d.id}`} className="rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500">Open</Link>
+                  </li>
+                )
+              })}
             </ul>
           )}
         </div>
@@ -316,9 +340,7 @@ function MaintainerPanel({ data }) {
       <div className="rounded-3xl border border-cyan-200 bg-gradient-to-br from-cyan-50/80 to-white p-5">
         <div className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Health</div>
         <div className="mt-2 flex items-end gap-3">
-          <div className="text-4xl font-semibold tabular-nums text-zinc-900">
-            <CountUp value={data.health?.score ?? 0} />
-          </div>
+          <div className="text-4xl font-semibold tabular-nums text-zinc-900"><CountUp value={data.health?.score ?? 0} /></div>
           <div className="mb-1 text-sm text-cyan-800">{data.health?.label}</div>
         </div>
         <p className="mt-3 text-sm text-zinc-600">{data.summary}</p>

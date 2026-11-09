@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { FolderKanban, FilePlus2, Inbox, Activity, Sparkles } from 'lucide-react'
 import { listApprovals, listNeedsInput } from '../lib/api'
 
@@ -12,6 +13,7 @@ const LINKS = [
 
 export default function Sidebar() {
   const [badge, setBadge] = useState(0)
+  const location = useLocation()
 
   useEffect(() => {
     let cancelled = false
@@ -25,11 +27,13 @@ export default function Sidebar() {
     }
     load()
     const t = setInterval(load, 12000)
-    return () => {
-      cancelled = true
-      clearInterval(t)
-    }
+    return () => { cancelled = true; clearInterval(t) }
   }, [])
+
+  function isActive(to, end) {
+    if (end) return location.pathname === '/'
+    return location.pathname === to || location.pathname.startsWith(to + '/')
+  }
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-zinc-200/80 bg-white/90 backdrop-blur-xl">
@@ -44,27 +48,32 @@ export default function Sidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3" aria-label="Primary">
-        {LINKS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              [
-                'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
-                isActive
-                  ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100'
-                  : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900',
-              ].join(' ')
-            }
-          >
-            <Icon className="h-4 w-4 shrink-0 opacity-80 transition group-hover:opacity-100" aria-hidden />
-            <span className="flex-1">{label}</span>
-            {label === 'Inbox' && badge > 0 && (
-              <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">{badge}</span>
-            )}
-          </NavLink>
-        ))}
+        {LINKS.map(({ to, label, icon: Icon, end }) => {
+          const active = isActive(to, end)
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={`relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                active ? 'text-indigo-700' : 'text-zinc-600 hover:text-zinc-900'
+              }`}
+            >
+              {active && (
+                <motion.span
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 shadow-sm ring-1 ring-indigo-100"
+                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                />
+              )}
+              <Icon className="relative z-10 h-4 w-4 shrink-0 opacity-80" aria-hidden />
+              <span className="relative z-10 flex-1">{label}</span>
+              {label === 'Inbox' && badge > 0 && (
+                <span className="relative z-10 rounded-full bg-indigo-600 px-2 py-0.5 text-[10px] font-semibold text-white">{badge}</span>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
 
       <div className="border-t border-zinc-200/80 p-4">

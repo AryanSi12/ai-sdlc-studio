@@ -54,7 +54,7 @@ export default function Inbox() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Inbox</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl">Inbox</h1>
         <p className="mt-1 text-sm text-zinc-500">Quizzes and approval gates waiting on you.</p>
       </div>
 
