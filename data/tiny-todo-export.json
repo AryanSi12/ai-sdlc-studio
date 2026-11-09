@@ -1,0 +1,425 @@
+{
+  "exported_at": "2026-11-09T10:34:14.171340+00:00",
+  "projects": [
+    {
+      "id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "Tiny Todo API",
+      "description": "First end-to-end test run",
+      "type": "new",
+      "repo_url": "https://github.com/AryanSi12/tiny-todo",
+      "spec_md": "# Tiny Todo API\n\nFirst end-to-end test run\n",
+      "current_stage": "deployment",
+      "status": "done",
+      "active_bot": "orchestrator",
+      "created_at": "2026-11-09 09:34:48.758824",
+      "updated_at": "2026-11-09T10:32:35.692345+00:00",
+      "quiz_complete": 1
+    }
+  ],
+  "stages": [
+    {
+      "id": "ce6782c7-fdcd-4e60-9449-7bcde9136ef8",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "requirements",
+      "status": "done",
+      "bot": "requirement_gatherer",
+      "output_label": "Requirements",
+      "output_url": "/projects/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/docs/2c2e2b36-a302-4652-908d-216b13e18a9a",
+      "started_at": "2026-11-09 09:34:48.756944",
+      "ended_at": "2026-11-09 09:35:59.343509"
+    },
+    {
+      "id": "84a345a2-8bbc-424f-b06a-373aad0227bf",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "design",
+      "status": "done",
+      "bot": "designer",
+      "output_label": "Design",
+      "output_url": "/projects/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/docs/2e010027-9e6f-49fa-a7d3-dc3e012a9c48",
+      "started_at": "2026-11-09 09:35:59.344004",
+      "ended_at": "2026-11-09 09:59:16.411588"
+    },
+    {
+      "id": "6e33b369-f777-4039-acbb-cc7588f350d0",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "development",
+      "status": "done",
+      "bot": "developer",
+      "output_label": "GitHub repository",
+      "output_url": "https://github.com/AryanSi12/tiny-todo",
+      "started_at": "2026-11-09 09:59:16.411867",
+      "ended_at": "2026-11-09 10:01:46.185425"
+    },
+    {
+      "id": "b1077fef-9dfb-4966-a775-4ac21be86a3f",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "testing",
+      "status": "done",
+      "bot": "tester",
+      "output_label": "Test Report",
+      "output_url": "/projects/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/docs/793ef217-ff14-4940-9066-43e22da96ecd",
+      "started_at": "2026-11-09 10:01:46.185709",
+      "ended_at": "2026-11-09 10:06:45.672404"
+    },
+    {
+      "id": "57ac7eb0-82ee-47d4-9aae-4152310565cb",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "name": "deployment",
+      "status": "done",
+      "bot": "deployer",
+      "output_label": "Live app",
+      "output_url": "https://tiny-todo-api.onrender.com",
+      "started_at": "2026-11-09 10:07:08.355379",
+      "ended_at": "2026-11-09 10:22:33.022477"
+    }
+  ],
+  "approvals": [
+    {
+      "id": "ccf044f5-1e65-42d4-8a7a-2108427eeb1f",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "gate": "design",
+      "status": "approved",
+      "summary": "Tiny Todo API design: FastAPI (Python 3.11) + built-in sqlite3, one todos table, 5 endpoints (/health, POST/GET /todos with done filter, PATCH/DELETE /todos/{id}) covering TODO-1..7; pytest with a temp DB per test, one test per acceptance criterion. Decisions: PATCH only toggles done (no title/due edits); titles trimmed, max 200 chars (422 otherwise); list in creation order. Render free plan with DB_PATH=/tmp/todos.db, so data is lost on redeploy/restart/idle (accepted for demo; paid plan + disk at /var/data is a config-only fix). Risks: ephemeral data, cold-start latency on health check, public API with no auth by design; pins verified on Python 3.13 (3.11 not on box).",
+      "comment": "Approved by Aryan in the local site on his PC (09:57 UTC); mirrored by Orchestrator",
+      "decided_by": "Aryan Singh",
+      "created_at": "2026-11-09 09:38:50.846310",
+      "decided_at": "2026-11-09 09:59:16.410699"
+    },
+    {
+      "id": "3c3c32a9-c618-41d3-b1b1-3feceb97599b",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "gate": "release",
+      "status": "approved",
+      "summary": "Tiny Todo API passed testing (feature/tiny-todo-api @ efb311b): 46/46 pytest, 100% coverage, 23/23 extra edge-case probes, all acceptance criteria pass except AC-6.4 (live Render health check, runs after deploy). No blocking defects; 2 trivial notes (done filter also accepts y/n; .coverage not in .gitignore). Deploy plan: Render free web service per render.yaml, SQLite at /tmp (data wiped on redeploy/restart). Prerequisite: the code is only in a local git repo, so it must be pushed to a GitHub repo Render can read before deploying.",
+      "comment": "Approved by Aryan in Orchestrator chat: push to a new private GitHub repo and deploy to Render",
+      "decided_by": "Aryan Singh",
+      "created_at": "2026-11-09 10:06:45.674381",
+      "decided_at": "2026-11-09 10:07:08.336730"
+    }
+  ],
+  "events": [
+    {
+      "id": "dee40a24-33ef-4384-802b-7343e5f6de6f",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "Project created",
+      "details": "type=new",
+      "reason": "User started a new run",
+      "created_at": "2026-11-09 09:34:48.759506"
+    },
+    {
+      "id": "3fadbff2-1453-4336-85b8-6418e5a93370",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "handoff_requirements",
+      "details": "Sent spec samples/todo-api-spec.md to SDLC Requirement Gatherer",
+      "reason": "New project run received; Requirements is the first stage",
+      "created_at": "2026-11-09 09:35:07.054836"
+    },
+    {
+      "id": "14e6bac3-01e6-41e6-be89-a7afbb14ff82",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "requirement_gatherer",
+      "action": "Started requirements gathering",
+      "details": "Reading spec samples/todo-api-spec.md",
+      "reason": null,
+      "created_at": "2026-11-09 09:35:27.015760"
+    },
+    {
+      "id": "94d4fe11-4a7e-4665-a132-de48ec66b2a4",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "requirement_gatherer",
+      "action": "Published requirements doc",
+      "details": "7 user stories (TODO-1..7) with acceptance criteria, 7 NFRs, 4 non-blocking open questions",
+      "reason": null,
+      "created_at": "2026-11-09 09:35:59.349523"
+    },
+    {
+      "id": "7ec08fa3-fbbb-45a9-a956-be4f9c527aa5",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "handoff_design",
+      "details": "Sent requirements.md (7 stories, 7 NFRs, 4 non-blocking open questions with assumptions) to SDLC Designer",
+      "reason": "Requirements stage complete; open questions have stated assumptions so design can proceed",
+      "created_at": "2026-11-09 09:36:16.241640"
+    },
+    {
+      "id": "07fe2854-424a-429b-a5b0-f6c415961fb4",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "designer",
+      "action": "design_started",
+      "details": "Designer started design.md for Tiny Todo API from requirements.md",
+      "reason": null,
+      "created_at": "2026-11-09 09:36:56.532313"
+    },
+    {
+      "id": "58da4273-959a-436e-824e-9a9b560a087c",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "designer",
+      "action": "design_written",
+      "details": "design.md written: FastAPI + stdlib sqlite3, 5 endpoints mapped to TODO-1..7, ephemeral SQLite on Render free plan via DB_PATH (disk upgrade path), pytest with temp DB per test, render.yaml.",
+      "reason": null,
+      "created_at": "2026-11-09 09:38:15.925872"
+    },
+    {
+      "id": "bb68c341-8833-4f9f-9bce-66069ee65790",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "request_design_approval",
+      "details": "Design complete (design.md). Opening design gate; Development will not start until approved.",
+      "reason": "Human design gate required before Development",
+      "created_at": "2026-11-09 09:38:50.846472"
+    },
+    {
+      "id": "890da964-e568-4996-ac4d-8f8d92292328",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "Approved design gate",
+      "details": "approval_id=ccf044f5-1e65-42d4-8a7a-2108427eeb1f",
+      "reason": "Approved by Aryan in the local site on his PC (09:57 UTC); mirrored by Orchestrator",
+      "created_at": "2026-11-09 09:59:16.416025"
+    },
+    {
+      "id": "1edb70c5-ab33-42e0-836d-31836a2d0aa7",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "handoff_development",
+      "details": "Sent requirements.md + design.md to SDLC Developer",
+      "reason": "Design gate approved by Aryan",
+      "created_at": "2026-11-09 09:59:23.508810"
+    },
+    {
+      "id": "075e98e7-7d11-4b05-9da5-ad56b60f6853",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "developer",
+      "action": "development.started",
+      "details": "Developer started building Tiny Todo API per approved design (approval ccf044f5-1e65-42d4-8a7a-2108427eeb1f). Local git repo at runs/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/app, feature branch feature/tiny-todo-api.",
+      "reason": null,
+      "created_at": "2026-11-09 10:00:04.039394"
+    },
+    {
+      "id": "1795b0fa-16c3-4736-8cd0-633d537acd38",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "developer",
+      "action": "development.completed",
+      "details": "Tiny Todo API built per approved design. Local repo /workspace/ai-sdlc-studio/runs/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/app, branch feature/tiny-todo-api (base main), head efb311b. pytest: 46 passed, 0 failed, 0 skipped. All ACs in TODO-1..TODO-5 covered, plus AC-6.1-6.3 and AC-7.2. Not pushed or deployed (no GitHub repo given).",
+      "reason": null,
+      "created_at": "2026-11-09 10:01:46.186932"
+    },
+    {
+      "id": "2491b983-1e7b-42ce-830c-94cd8762640b",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "handoff_testing",
+      "details": "Sent feature/tiny-todo-api@efb311b (46 dev tests passing) to SDLC Tester",
+      "reason": "Development complete; independent verification against acceptance criteria required before release gate",
+      "created_at": "2026-11-09 10:02:28.749255"
+    },
+    {
+      "id": "31299760-8944-4925-8286-f810ee2c1de7",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "tester",
+      "action": "testing.started",
+      "details": "Testing stage started: independently verifying Tiny Todo API",
+      "reason": null,
+      "created_at": "2026-11-09 10:03:18.671286"
+    },
+    {
+      "id": "3e01767d-fa43-4413-ada4-67859aa6dfa7",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "tester",
+      "action": "testing.progress",
+      "details": "46/46 suite green, 100% coverage; edge probes nearly done; writing test-report.md",
+      "reason": null,
+      "created_at": "2026-11-09 10:05:18.686980"
+    },
+    {
+      "id": "c5a224f0-b126-4a31-adea-5e011b2154d7",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "tester",
+      "action": "testing.report",
+      "details": "PASS: 46/46 pytest, 100% coverage, 23/23 edge probes. AC-6.4 deferred. No blocking defects. Report at runs/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/test-report.md. stage_status left active (not done) so deployment is not auto-started.",
+      "reason": null,
+      "created_at": "2026-11-09 10:06:05.722281"
+    },
+    {
+      "id": "1aeda86c-612f-4e16-aa88-a3c021033b7e",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "request_release_approval",
+      "details": "Testing passed. Opening release gate; Deployment will not start until approved.",
+      "reason": "Human release gate required before Deployment",
+      "created_at": "2026-11-09 10:06:45.674697"
+    },
+    {
+      "id": "c63c1716-569d-45a5-910b-6218b3f974b0",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "Approved release gate",
+      "details": "approval_id=3c3c32a9-c618-41d3-b1b1-3feceb97599b",
+      "reason": "Approved by Aryan in Orchestrator chat: push to a new private GitHub repo and deploy to Render",
+      "created_at": "2026-11-09 10:07:08.338857"
+    },
+    {
+      "id": "d04d8710-5084-41da-a43d-7b935e22dec3",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "handoff_deployment",
+      "details": "Sent feature/tiny-todo-api@efb311b to SDLC Deployer: create private GitHub repo, push, deploy to Render free web service per render.yaml",
+      "reason": "Release gate approved by Aryan",
+      "created_at": "2026-11-09 10:07:08.356088"
+    },
+    {
+      "id": "2b93abc1-3881-48c4-868a-eb0f66ee31a5",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "deployer",
+      "action": "Deployment blocked: waiting on Aryan to create GitHub repo",
+      "details": "main fast-forwarded to efb311b locally. Cursor cannot create GitHub repos or push code via the connector, and gh is not authenticated on the box. Needed from Aryan: create an EMPTY private repo github.com/AryanSi12/tiny-todo-api (no README/license/.gitignore) and grant it to Cursor's GitHub App (https://github.com/apps/cursor/installations/new) and Render's GitHub App, then push (or let a cloud agent push) local main. Render workspace is ready (free plan, GitHub already linked).",
+      "reason": "blocked: repo creation requires Aryan",
+      "created_at": "2026-11-09 10:08:08.972960"
+    },
+    {
+      "id": "2d1aa325-cdb8-4afe-8720-bda1db05409a",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "deployer",
+      "action": "Deployed Tiny Todo API to Render (free)",
+      "details": "Release notes: shipped FastAPI+SQLite todo API from private repo github.com/AryanSi12/tiny-todo (main @ efb311b) to Render free web service srv-dbops6vf3r2c73bv08c0, live at https://tiny-todo-api.onrender.com. GET /health -> 200 {\"status\":\"ok\"} (AC-6.4 closed). Smoke: POST /todos 201, GET /todos 200. Tests 46/46. Note: DB in /tmp is ephemeral on free plan.",
+      "reason": null,
+      "created_at": "2026-11-09 10:22:33.023736"
+    },
+    {
+      "id": "4538769b-4969-4682-9b6c-3aa6aee24f2b",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "run_complete",
+      "details": "Verified live https://tiny-todo-api.onrender.com/health = 200; repo AryanSi12/tiny-todo private, main. Pipeline complete.",
+      "reason": "All stages done and gates approved",
+      "created_at": "2026-11-09 10:23:03.283227"
+    },
+    {
+      "id": "be7f92fb-df64-401b-9429-4426a3c6e07f",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "document.uploaded.requirements",
+      "details": "Requirements",
+      "reason": "Document stored in Studio (requirements)",
+      "created_at": "2026-11-09 10:29:11.332607"
+    },
+    {
+      "id": "0bfdb87a-8677-499f-848a-9e16c8ac154a",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "document.uploaded.design",
+      "details": "Design",
+      "reason": "Document stored in Studio (design)",
+      "created_at": "2026-11-09 10:29:11.340615"
+    },
+    {
+      "id": "d1460d4e-dfee-42a4-8fc2-eacac999598d",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "orchestrator",
+      "action": "document.uploaded.test_report",
+      "details": "Test Report",
+      "reason": "Document stored in Studio (test_report)",
+      "created_at": "2026-11-09 10:29:11.346635"
+    },
+    {
+      "id": "cf061196-f835-49e6-b3cd-d0c5f61e83ed",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "bot": "deployer",
+      "action": "document.uploaded.release_notes",
+      "details": "Release notes",
+      "reason": "Document stored in Studio (release_notes)",
+      "created_at": "2026-11-09 10:29:11.352624"
+    }
+  ],
+  "documents": [
+    {
+      "id": "2c2e2b36-a302-4652-908d-216b13e18a9a",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "kind": "requirements",
+      "title": "Requirements",
+      "markdown": "# Requirements: Tiny Todo API\n\n- **Project ID:** 5fa499f1-4bbe-46ac-8135-f1fb5834b0e0\n- **Type:** New project\n- **Source spec:** `/workspace/ai-sdlc-studio/samples/todo-api-spec.md`\n- **Stage:** Requirements (prepared by SDLC Requirement Gatherer, 2026-11-09)\n\n## 1. Goals\n1. Provide a minimal REST API for managing a single personal todo list.\n2. Serve as the first end-to-end test of AI SDLC Studio (requirements \u2192 design \u2192 development \u2192 testing \u2192 deployment), so the scope is kept small and fully testable.\n\n## 2. Scope\n- CRUD-style operations on todos: create, list (with done/not-done filter), toggle done state, delete.\n- A `/health` endpoint for liveness checks.\n- SQLite persistence.\n- Automated pytest suite covering all stories.\n- Deployment to Render as a web service.\n\n## 3. Out of scope\n- Authentication or authorization of any kind.\n- Multiple users, accounts, or per-user lists.\n- Any frontend or UI.\n- Editing a todo's title or due date after creation (not in the spec; see Open Questions Q1).\n- Pagination, sorting options, search, tags, priorities, reminders/notifications.\n\n## 4. Data model (logical)\n| Field | Type | Rules |\n|---|---|---|\n| `id` | integer | Server-generated, unique, immutable |\n| `title` | string | Required; non-empty after trimming whitespace; max 200 chars (assumption, Q3) |\n| `due_date` | date (ISO 8601 `YYYY-MM-DD`) or null | Optional |\n| `done` | boolean | Defaults to `false` on create |\n| `created_at` | datetime (ISO 8601, UTC) | Server-generated |\n\n## 5. User stories and acceptance criteria\n\n### TODO-1: Create a todo\n*As a user, I want to create a todo with a title and an optional due date, so that I can track something I need to do.*\n\n- **AC-1.1** `POST /todos` with JSON `{\"title\": \"Buy milk\"}` returns **201** and the created todo with `id`, `title`, `due_date: null`, `done: false`, `created_at`.\n- **AC-1.2** `POST /todos` with `{\"title\": \"Pay rent\", \"due_date\": \"2026-12-01\"}` returns **201** and echoes `due_date` as `\"2026-12-01\"`.\n- **AC-1.3** A missing, empty, or whitespace-only `title` returns **422** and no todo is stored.\n- **AC-1.4** An invalid `due_date` (e.g. `\"tomorrow\"`, `\"2026-13-40\"`) returns **422** and no todo is stored.\n- **AC-1.5** Client-supplied `id`, `done`, or `created_at` in the create body are ignored or rejected; a new todo is always `done: false` with a server-assigned `id`.\n- **AC-1.6** A created todo is persisted: it appears in a subsequent `GET /todos`.\n\n### TODO-2: List todos with a done filter\n*As a user, I want to list my todos and filter by done / not done, so that I can see what's left.*\n\n- **AC-2.1** `GET /todos` returns **200** and a JSON array of all todos (empty array when none exist).\n- **AC-2.2** `GET /todos?done=true` returns only todos with `done: true`.\n- **AC-2.3** `GET /todos?done=false` returns only todos with `done: false`.\n- **AC-2.4** An invalid filter value (e.g. `done=maybe`) returns **422**.\n- **AC-2.5** Results are returned in a stable order: ascending by `id` (creation order) (assumption, Q4).\n\n### TODO-3: Mark a todo as done or undone\n*As a user, I want to mark a todo done, or undo that, so that the list reflects my progress.*\n\n- **AC-3.1** `PATCH /todos/{id}` with `{\"done\": true}` returns **200** and the updated todo with `done: true`.\n- **AC-3.2** `PATCH /todos/{id}` with `{\"done\": false}` returns **200** and the todo with `done: false`.\n- **AC-3.3** The operation is idempotent: setting `done` to its current value returns **200** with no other change.\n- **AC-3.4** A non-existent `id` returns **404** with a JSON error body.\n- **AC-3.5** A missing or non-boolean `done` value returns **422** and the todo is unchanged.\n- **AC-3.6** The change is persisted and reflected in `GET /todos` and its filters.\n\n### TODO-4: Delete a todo\n*As a user, I want to delete a todo, so that I can remove things I no longer need.*\n\n- **AC-4.1** `DELETE /todos/{id}` returns **204** with no body.\n- **AC-4.2** After deletion the todo no longer appears in `GET /todos`.\n- **AC-4.3** Deleting a non-existent (or already deleted) `id` returns **404**.\n\n### TODO-5: Health check\n*As an operator (and Render), I want a health endpoint, so that I can tell the service is up.*\n\n- **AC-5.1** `GET /health` returns **200** with JSON `{\"status\": \"ok\"}`.\n- **AC-5.2** `/health` requires no request body or parameters and does not modify data.\n- **AC-5.3** Render's health check path is configured to `/health`.\n\n### TODO-6: Deployable to Render\n*As the team, I want the service deployable to Render as a web service, so that the pipeline can complete its deployment stage.*\n\n- **AC-6.1** The repo contains what Render needs to build and start the app (dependency file, and a start command such as `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; a `render.yaml` Blueprint is preferred).\n- **AC-6.2** The app binds to the `PORT` environment variable supplied by Render.\n- **AC-6.3** The SQLite database path is configurable via an environment variable (e.g. `DATABASE_URL`), with a sensible local default; the schema is created automatically on startup.\n- **AC-6.4** After deploy, `GET /health` on the public URL returns 200.\n\n### TODO-7: Automated test suite\n*As the team, I want pytest coverage of every story, so that the Tester stage can verify the build.*\n\n- **AC-7.1** `pytest` runs from the repo root with no external services required.\n- **AC-7.2** Tests use an isolated SQLite database (temp file or in-memory), not the real data file.\n- **AC-7.3** Every acceptance criterion in TODO-1 through TODO-5 has at least one test.\n- **AC-7.4** All tests pass.\n\n## 6. Non-functional requirements\n- **NFR-1 Stack:** Python 3.11, FastAPI, SQLite. No other datastore.\n- **NFR-2 API style:** JSON request/response bodies; standard HTTP status codes as listed above; errors returned as JSON (FastAPI's default `{\"detail\": ...}` shape is acceptable).\n- **NFR-3 Documentation:** Auto-generated OpenAPI docs available at `/docs`; a README explains how to run locally, run tests, and deploy.\n- **NFR-4 Performance:** Single-user scale; any endpoint responds in under 200 ms locally for lists up to 1,000 todos. No load requirements beyond that.\n- **NFR-5 Persistence caveat:** On Render, SQLite on the default ephemeral filesystem loses data on redeploy/restart. Acceptable for this test project unless the Orchestrator says otherwise (Q2).\n- **NFR-6 Simplicity:** Keep dependencies minimal (FastAPI, uvicorn, pydantic, pytest, httpx for tests; an ORM such as SQLAlchemy/SQLModel is optional).\n- **NFR-7 Security:** No auth by design; the service must not expose anything beyond the todo data and health status.\n\n## 7. Constraints (from spec)\n- Python 3.11 + FastAPI, SQLite storage.\n- pytest automated tests; all must pass.\n- `/health` endpoint required.\n- Deployable to Render as a web service.\n\n## 8. Assumptions\n- A1. Endpoint paths are `/todos` and `/todos/{id}`; the spec does not name them.\n- A2. \"Mark done or undone\" is a `PATCH` on the `done` field rather than separate action endpoints.\n- A3. `due_date` is a calendar date, not a datetime; past dates are allowed.\n- A4. Title max length 200 characters.\n\n## 9. Open questions (for SDLC Orchestrator)\n- **Q1.** Should users be able to edit a todo's title or due date? The spec doesn't list it; currently out of scope.\n- **Q2.** Is data loss on Render redeploy acceptable, or should a Render persistent disk be attached for the SQLite file?\n- **Q3.** Is a 200-character title limit acceptable?\n- **Q4.** Is ordering by creation order fine, or should lists sort by due date?\n\nNone of these block design; the Designer can proceed using the assumptions above.\n\n## 10. Traceability\n| Spec item | Story |\n|---|---|\n| Feature 1: Create | TODO-1 |\n| Feature 2: List + filter | TODO-2 |\n| Feature 3: Done/undone | TODO-3 |\n| Feature 4: Delete | TODO-4 |\n| Constraint: /health | TODO-5 |\n| Constraint: Render | TODO-6 |\n| Constraint: pytest | TODO-7 |\n| Constraint: Python/FastAPI/SQLite | NFR-1 |\n| Out of scope: auth, multi-user, UI | Section 3 |\n",
+      "created_by_bot": "orchestrator",
+      "created_at": "2026-11-09 10:29:11.331564"
+    },
+    {
+      "id": "2e010027-9e6f-49fa-a7d3-dc3e012a9c48",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "kind": "design",
+      "title": "Design",
+      "markdown": "# Design: Tiny Todo API\n\n- **Project ID:** 5fa499f1-4bbe-46ac-8135-f1fb5834b0e0\n- **Stage:** Design (SDLC Designer, 2026-11-09)\n- **Inputs:** `requirements.md` (this folder), `samples/todo-api-spec.md`\n- **Stack:** Python 3.11, FastAPI, SQLite (stdlib `sqlite3`), pytest, Render web service\n\n## 1. Architecture overview\n\nA single FastAPI process. Routers validate input with Pydantic, call a thin repository module that runs parameterized SQL against one SQLite file. No ORM, no background jobs, no auth.\n\n```mermaid\nflowchart LR\n    Client[HTTP client / Render health checker] -->|JSON over HTTPS| Uvicorn\n    subgraph Render web service\n        Uvicorn[uvicorn :$PORT] --> App[FastAPI app<br/>app/main.py]\n        App --> Health[GET /health]\n        App --> Todos[/todos router<br/>app/routes.py/]\n        Todos --> Schemas[Pydantic schemas<br/>app/schemas.py]\n        Todos --> Repo[Repository<br/>app/repository.py]\n        Repo --> DB[(SQLite file<br/>DB_PATH)]\n    end\n    App -. startup: init_db creates schema .-> DB\n```\n\nRequest flow: uvicorn \u2192 FastAPI route \u2192 Pydantic validation (422 on failure) \u2192 `get_conn` dependency opens a connection to `DB_PATH` \u2192 repository function \u2192 response model serialization.\n\n## 2. Tech stack (pinned)\n\nVerified to install and run together (TestClient works with httpx 0.28 via starlette 0.41.3).\n\n| Package | Version | Use |\n|---|---|---|\n| Python | 3.11.x (Render: `PYTHON_VERSION=3.11.11`) | Runtime |\n| fastapi | 0.115.6 | Web framework, OpenAPI at `/docs` (NFR-3) |\n| uvicorn[standard] | 0.32.1 | ASGI server |\n| pydantic | 2.10.4 | Validation |\n| sqlite3 | stdlib | Persistence (NFR-1) |\n| pytest | 8.3.4 | Tests (dev) |\n| httpx | 0.28.1 | TestClient transport (dev) |\n\n`requirements.txt` holds runtime deps; `requirements-dev.txt` = `-r requirements.txt` + pytest + httpx. (Putting all in one file is acceptable if simpler; Render only needs runtime.)\n\n## 3. Module / file layout\n\n```\ntiny-todo-api/\n\u251c\u2500\u2500 app/\n\u2502   \u251c\u2500\u2500 __init__.py\n\u2502   \u251c\u2500\u2500 main.py         # create_app(), lifespan -> init_db(), include router, /health\n\u2502   \u251c\u2500\u2500 config.py       # get_db_path(): os.environ.get(\"DB_PATH\", \"./data/todos.db\")\n\u2502   \u251c\u2500\u2500 db.py           # init_db(path), get_conn() dependency (yields sqlite3.Connection)\n\u2502   \u251c\u2500\u2500 schemas.py      # TodoCreate, TodoUpdate, TodoOut\n\u2502   \u251c\u2500\u2500 repository.py   # create_todo, list_todos, get_todo, set_done, delete_todo\n\u2502   \u2514\u2500\u2500 routes.py       # APIRouter(prefix=\"/todos\")\n\u251c\u2500\u2500 tests/\n\u2502   \u251c\u2500\u2500 conftest.py     # tmp DB fixture + TestClient\n\u2502   \u251c\u2500\u2500 test_health.py\n\u2502   \u251c\u2500\u2500 test_create.py\n\u2502   \u251c\u2500\u2500 test_list.py\n\u2502   \u251c\u2500\u2500 test_update.py\n\u2502   \u2514\u2500\u2500 test_delete.py\n\u251c\u2500\u2500 requirements.txt\n\u251c\u2500\u2500 requirements-dev.txt\n\u251c\u2500\u2500 render.yaml\n\u251c\u2500\u2500 pytest.ini          # testpaths = tests\n\u251c\u2500\u2500 .gitignore          # data/, *.db, .venv, __pycache__\n\u2514\u2500\u2500 README.md           # run locally, run tests, deploy (NFR-3)\n```\n\nImplementation notes:\n- `config.get_db_path()` is read **at call time** (not import time) so tests can override via `monkeypatch.setenv(\"DB_PATH\", ...)`.\n- `init_db` creates the parent directory (`os.makedirs(dirname, exist_ok=True)`) then runs `CREATE TABLE IF NOT EXISTS`.\n- `get_conn` opens `sqlite3.connect(path)`, sets `row_factory = sqlite3.Row`, `PRAGMA foreign_keys=ON` (harmless), yields, commits on success, always closes. One connection per request avoids cross-thread sharing issues (FastAPI runs sync routes in a threadpool).\n- Routes are plain `def` (sync); fine for single-user scale (NFR-4).\n\n## 4. Data model\n\n```sql\nCREATE TABLE IF NOT EXISTS todos (\n    id         INTEGER PRIMARY KEY AUTOINCREMENT,\n    title      TEXT    NOT NULL CHECK (length(trim(title)) BETWEEN 1 AND 200),\n    due_date   TEXT    NULL,      -- ISO 'YYYY-MM-DD'\n    done       INTEGER NOT NULL DEFAULT 0 CHECK (done IN (0, 1)),\n    created_at TEXT    NOT NULL   -- ISO 8601 UTC, e.g. '2026-11-09T09:30:00Z'\n);\nCREATE INDEX IF NOT EXISTS idx_todos_done ON todos (done, id);\n```\n\n- `AUTOINCREMENT` guarantees ids are never reused after delete (AC-4.3: a deleted id stays 404).\n- `idx_todos_done` serves `WHERE done = ? ORDER BY id` (AC-2.2/2.3/2.5). Not needed at 1,000 rows but free.\n- `created_at` is set in Python: `datetime.now(timezone.utc).isoformat(timespec=\"seconds\").replace(\"+00:00\",\"Z\")`.\n- Booleans stored as 0/1, converted to `bool` in the repository.\n\n## 5. API contract\n\nAll bodies are JSON. Errors use FastAPI's default shape (NFR-2):\n- 404: `{\"detail\": \"Todo not found\"}`\n- 422: `{\"detail\": [{\"type\": ..., \"loc\": [...], \"msg\": ..., \"input\": ...}, ...]}` (FastAPI validation error list)\n\n### Schemas (`app/schemas.py`)\n\n```python\nclass TodoCreate(BaseModel):\n    model_config = ConfigDict(extra=\"ignore\")         # AC-1.5: id/done/created_at silently ignored\n    title: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]\n    due_date: date | None = None                       # pydantic rejects \"tomorrow\", \"2026-13-40\"\n\nclass TodoUpdate(BaseModel):\n    model_config = ConfigDict(extra=\"ignore\")\n    done: StrictBool                                   # required; \"true\"/1 -> 422 (AC-3.5)\n\nclass TodoOut(BaseModel):\n    id: int\n    title: str\n    due_date: date | None\n    done: bool\n    created_at: str                                    # ISO 8601 UTC with 'Z'\n```\n\nTitle is stored **trimmed**. Max length is checked after trimming.\n\n### Endpoints\n\n| # | Method & path | Request | Success | Errors | Stories / ACs |\n|---|---|---|---|---|---|\n| E1 | `GET /health` | none | **200** `{\"status\":\"ok\"}` | none | TODO-5 (AC-5.1, 5.2, 5.3) |\n| E2 | `POST /todos` | `TodoCreate` | **201** `TodoOut` | **422** missing/empty/whitespace/>200-char title, bad `due_date`, non-JSON body | TODO-1 (AC-1.1\u20131.6) |\n| E3 | `GET /todos?done={true\\|false}` | optional query `done: bool` | **200** `list[TodoOut]` ordered by `id ASC`; `[]` when empty | **422** invalid `done` (e.g. `maybe`) | TODO-2 (AC-2.1\u20132.5) |\n| E4 | `PATCH /todos/{id}` | `TodoUpdate` | **200** `TodoOut` (updated) | **404** unknown id; **422** missing/non-bool `done`, non-integer id | TODO-3 (AC-3.1\u20133.6) |\n| E5 | `DELETE /todos/{id}` | none | **204** empty body | **404** unknown/already-deleted id; **422** non-integer id | TODO-4 (AC-4.1\u20134.3) |\n\nExamples:\n\n```http\nPOST /todos  {\"title\": \"Pay rent\", \"due_date\": \"2026-12-01\"}\n201 {\"id\": 1, \"title\": \"Pay rent\", \"due_date\": \"2026-12-01\", \"done\": false, \"created_at\": \"2026-11-09T09:30:00Z\"}\n\nPATCH /todos/1  {\"done\": true}\n200 {\"id\": 1, \"title\": \"Pay rent\", \"due_date\": \"2026-12-01\", \"done\": true, \"created_at\": \"2026-11-09T09:30:00Z\"}\n\nPATCH /todos/999  {\"done\": true}\n404 {\"detail\": \"Todo not found\"}\n```\n\nNotes:\n- Query `done` uses FastAPI `bool` parsing (accepts `true/false/1/0/yes/no/on/off`, case-insensitive); anything else \u2192 422. Only `true`/`false` are documented.\n- PATCH validates the body **before** the existence check, so `PATCH /todos/999 {}` returns 422, not 404. Tests should not depend on this ordering beyond what's stated.\n- PATCH is idempotent (AC-3.3): `UPDATE todos SET done=? WHERE id=?`; if `rowcount == 0` \u2192 404; re-select and return.\n- DELETE: `rowcount == 0` \u2192 404, else `Response(status_code=204)`.\n- No other routes besides FastAPI's `/docs`, `/redoc`, `/openapi.json` (NFR-7).\n\n## 6. Key decisions and tradeoffs\n\n| Decision | Choice | Tradeoff |\n|---|---|---|\n| Data access | stdlib `sqlite3` + 5 hand-written queries, no ORM | Fewest deps (NFR-6), transparent SQL; no migrations tooling, acceptable for one table. |\n| DB config | `DB_PATH` env var (file path), default `./data/todos.db` | Satisfies AC-6.3 (\"e.g. DATABASE_URL\"); a plain path is simpler than parsing a URL for SQLite only. |\n| Schema creation | `CREATE TABLE IF NOT EXISTS` in FastAPI lifespan | No migration step; schema changes later would need manual handling. |\n| Extra fields on create | Ignored (`extra=\"ignore\"`) | Friendlier than rejecting; AC-1.5 allows either. Server always sets `id`, `done=false`, `created_at`. |\n| Done update | `PATCH /todos/{id}` with `{\"done\": bool}` and `StrictBool` | One endpoint for done/undone (A2); strictness avoids `\"false\"` string being truthy-coerced surprises. |\n| Connections | New connection per request | Trivial overhead at this scale; avoids SQLite thread-affinity bugs. |\n| Ordering | `ORDER BY id ASC` | Stable and predictable (Q4). |\n\n### Open questions: decisions\n\n- **Q1 \u2013 Edit title/due date?** **No (out of scope).** Not in the spec; PATCH accepts only `done` and ignores other fields. `TodoUpdate` can gain optional `title`/`due_date` later without breaking clients.\n- **Q2 \u2013 SQLite persistence on Render?** **Ephemeral SQLite is accepted for this demo.** Render's free web service filesystem is wiped on every deploy/restart, and persistent disks need a paid plan. We deploy on the free plan with `DB_PATH=/tmp/todos.db` (or the default), and data is lost on redeploy/restart/spin-down. **Upgrade path, no code change:** move to a paid instance, attach a Render disk at `/var/data`, and set `DB_PATH=/var/data/todos.db` (commented block in `render.yaml`). Note: a disk limits the service to a single instance and disables zero-downtime deploys. A real datastore (Render Postgres) would need code changes and breaks NFR-1, so it's excluded.\n- **Q3 \u2013 200-char title limit?** **Yes.** Enforced after trimming in Pydantic (422) and backed by a DB `CHECK`.\n- **Q4 \u2013 Ordering?** **Creation order (`id ASC`).** Sorting by due date is out of scope; it could be added later as an optional `sort` query param.\n\n## 7. Test plan\n\nTooling: pytest + `fastapi.testclient.TestClient`. No external services (AC-7.1).\n\n**Isolation (AC-7.2):** `conftest.py`\n\n```python\n@pytest.fixture\ndef client(tmp_path, monkeypatch):\n    monkeypatch.setenv(\"DB_PATH\", str(tmp_path / \"test.db\"))\n    from app.main import create_app\n    with TestClient(create_app()) as c:   # context manager runs lifespan -> init_db\n        yield c\n```\n\nEvery test gets a fresh temp DB file, so there's no shared state and no order dependence.\n\n| File | Tests (AC covered) |\n|---|---|\n| test_health.py | 200 + `{\"status\":\"ok\"}` (5.1); GET with no params, and todo count unchanged after call (5.2). AC-5.3 is checked by asserting `healthCheckPath: /health` in `render.yaml` (simple YAML/text read). |\n| test_create.py | title only \u2192 201, fields/defaults (1.1); with due_date echoed (1.2); missing / `\"\"` / `\"   \"` title \u2192 422 and list empty (1.3); 201-char title \u2192 422, 200-char \u2192 201 (Q3); `\"tomorrow\"`, `\"2026-13-40\"` \u2192 422 and list empty (1.4); body with `id: 99, done: true, created_at: \"x\"` \u2192 201 with server id and `done:false` (1.5); created item appears in GET (1.6); title trimmed. |\n| test_list.py | empty \u2192 `[]` (2.1); mixed set: `done=true` (2.2), `done=false` (2.3); `done=maybe` \u2192 422 (2.4); order by id asc (2.5). |\n| test_update.py | set true (3.1); set false (3.2); repeat same value \u2192 200, other fields unchanged (3.3); unknown id \u2192 404 + `{\"detail\": ...}` (3.4); `{}`, `{\"done\":\"yes\"}`, `{\"done\":\"true\"}`, `{\"done\":1}` \u2192 422 and todo unchanged (3.5); reflected in GET filters (3.6). |\n| test_delete.py | 204 + empty body (4.1); gone from GET (4.2); unknown id and second delete \u2192 404 (4.3); deleted id not reused by next create. |\n\nTarget: all ACs in TODO-1..5 covered (AC-7.3); `pytest` exits 0 (AC-7.4). Optional: `pytest --cov=app` \u2265 90% if pytest-cov is added (not required).\n\n## 8. Render deploy plan\n\n`render.yaml` (Blueprint, AC-6.1):\n\n```yaml\nservices:\n  - type: web\n    name: tiny-todo-api\n    runtime: python\n    plan: free\n    buildCommand: pip install -r requirements.txt\n    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT\n    healthCheckPath: /health\n    autoDeploy: true\n    envVars:\n      - key: PYTHON_VERSION\n        value: 3.11.11\n      - key: DB_PATH\n        value: /tmp/todos.db        # ephemeral on free plan (Q2)\n    # Persistent option (paid plan only): uncomment and set DB_PATH=/var/data/todos.db\n    # disk:\n    #   name: todo-data\n    #   mountPath: /var/data\n    #   sizeGB: 1\n```\n\n- `app.main` must expose a module-level `app = create_app()`.\n- Binds `$PORT` from Render (AC-6.2). Schema auto-created on boot (AC-6.3).\n- Post-deploy check: `curl -fsS https://<service>.onrender.com/health` \u2192 200 `{\"status\":\"ok\"}` (AC-6.4). Free services spin down when idle, so the first request may take ~30\u201360 s; the deploy stage should retry for up to ~2 min.\n- No secrets needed.\n\n## 9. Risks and mitigations\n\n| Risk | Impact | Mitigation |\n|---|---|---|\n| Ephemeral filesystem on Render free plan | All todos lost on redeploy/restart/spin-down | Accepted for demo (Q2); documented in README; disk upgrade path needs only a config change. |\n| Free-plan cold starts | First health check after idle is slow, may look like a failed deploy | Retry the health check with backoff in the deploy stage. |\n| Python version drift on Render | Different default Python could break pins | Pin `PYTHON_VERSION=3.11.11`. |\n| SQLite concurrent writes | `database is locked` under parallel writes | Single-user scope; per-request connections; `sqlite3.connect(timeout=5)`. |\n| Env read at import time | Tests hit the real DB file | `get_db_path()` called at runtime; `create_app()` factory; fixture uses `tmp_path`. |\n| Dependency upgrades (httpx/starlette TestClient breakage) | Test suite fails on install | Exact pins in requirements files (verified combo). |\n| Unauthenticated public API | Anyone can modify data | By design (out of scope, NFR-7); demo data only. |\n\n## 10. Task breakdown\n\n| Task | Description | Stories |\n|---|---|---|\n| T1 | Scaffold repo: layout, `requirements*.txt`, `pytest.ini`, `.gitignore` | TODO-6, TODO-7 |\n| T2 | `config.py` + `db.py` (`init_db`, `get_conn`, schema + index) | TODO-6 (AC-6.3), NFR-1 |\n| T3 | `main.py`: `create_app()`, lifespan, `/health`, module `app` | TODO-5 |\n| T4 | `schemas.py` (TodoCreate/Update/Out) | TODO-1, TODO-3 |\n| T5 | `repository.py` (create, list w/ filter, set_done, delete) | TODO-1..4 |\n| T6 | `routes.py` endpoints E2\u2013E5 with status codes/404s | TODO-1..4 |\n| T7 | `tests/conftest.py` + test files per section 7 | TODO-7 (and verifies TODO-1..5) |\n| T8 | `render.yaml` per section 8 | TODO-6 (AC-6.1, 6.2), TODO-5 (AC-5.3) |\n| T9 | README: local run (`uvicorn app.main:app --reload`), tests (`pip install -r requirements-dev.txt && pytest`), deploy, persistence caveat | NFR-3, NFR-5 |\n| T10 | Run `pytest` \u2192 all green; local smoke `curl /health` | TODO-7 (AC-7.4) |\n\nDefinition of done for Development: T1\u2013T10 complete, `pytest` passes from repo root, `/docs` loads, and `render.yaml` is valid.\n",
+      "created_by_bot": "orchestrator",
+      "created_at": "2026-11-09 10:29:11.340467"
+    },
+    {
+      "id": "793ef217-ff14-4940-9066-43e22da96ecd",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "kind": "test_report",
+      "title": "Test Report",
+      "markdown": "# Test Report: Tiny Todo API\n\n- **Project ID:** `5fa499f1-4bbe-46ac-8135-f1fb5834b0e0`\n- **Stage:** Testing (SDLC Tester)\n- **Date:** 2026-11-09 (Asia/Calcutta)\n- **Code under test:** local git repo `runs/.../app`, branch `feature/tiny-todo-api` @ `efb311b` (diff vs `main` @ `486bb32`)\n- **Verdict:** **PASS**\n\n## 1. Summary\n\n| Metric | Result |\n|---|---|\n| Existing suite | **46 passed / 0 failed** (pytest 8.3.4, Python 3.11.18, `app/.venv`) |\n| Line coverage (`app/`) | **100%** (109/109 statements; pytest-cov in throwaway `tester/.venv-cov`) |\n| Independent edge probes | **23 passed / 0 failed** (`tester/test_edge_cases.py`, outside repo) |\n| Acceptance criteria TODO-1..7 | All covered and passing except **AC-6.4 Deferred** (live Render health) |\n| `app/` git status after testing | **Clean** (no modifications, commits, or pushes) |\n\nDeveloper claim of 46/46 independently confirmed. No blocking defects found.\n\n## 2. How verification was done\n\n1. Read `requirements.md` (TODO-1..7) and `design.md`.\n2. Reviewed `git diff 486bb32..efb311b` (19 files, +602 lines): FastAPI app, SQLite repo, pytest suite, `render.yaml`, README.\n3. Ran `app/.venv/bin/pytest -v` \u2192 46 passed.\n4. Installed pytest-cov into a **separate** venv under `tester/` (did not alter `app/.venv` or requirements files); coverage 100%. Removed stray `.coverage` from `app/` so git stayed clean.\n5. Built AC \u2192 test traceability matrix (below).\n6. Wrote and ran edge probes under `tester/` (validation, 200/201-char titles, 404s, malformed ids, filters, render.yaml).\n7. Reviewed `render.yaml` against design and Render conventions.\n\n**Hard rules followed:** no branch edits, commits, pushes, or deploys.\n\n## 3. Suite counts\n\n```\n======================== 46 passed, 1 warning in ~0.65s ========================\n```\n\nWarning: Starlette TestClient `anyio.abc.BlockingPortal` deprecation (dependency noise; not a product defect).\n\nCoverage (throwaway venv):\n\n```\nName                Stmts   Miss  Cover\napp/__init__.py         0      0   100%\napp/config.py           4      0   100%\napp/db.py              23      0   100%\napp/main.py            16      0   100%\napp/repository.py      26      0   100%\napp/routes.py          24      0   100%\napp/schemas.py         16      0   100%\nTOTAL                 109      0   100%\n```\n\n## 4. Per-story results and AC traceability\n\n### TODO-1 Create a todo \u2014 **PASS**\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-1.1 POST title-only \u2192 201 + fields | `test_ac_1_1_create_title_only`, `test_title_is_trimmed` | Pass |\n| AC-1.2 due_date echoed | `test_ac_1_2_create_with_due_date` | Pass |\n| AC-1.3 missing/empty/whitespace title \u2192 422, nothing stored | `test_ac_1_3_missing_or_blank_title_rejected` (+ length/non-JSON extras) | Pass |\n| AC-1.4 invalid due_date \u2192 422 | `test_ac_1_4_invalid_due_date_rejected` | Pass |\n| AC-1.5 client id/done/created_at ignored | `test_ac_1_5_client_fields_ignored` | Pass |\n| AC-1.6 persisted in GET | `test_ac_1_6_created_todo_persisted` | Pass |\n\nAlso: 200-char title \u2192 201; 201-char \u2192 422 (`test_ac_1_3_title_length_limit` + edge probes).\n\n### TODO-2 List + filter \u2014 **PASS**\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-2.1 empty / all | `test_ac_2_1_empty_list`, `test_ac_2_1_lists_all` | Pass |\n| AC-2.2 done=true | `test_ac_2_2_filter_done_true` | Pass |\n| AC-2.3 done=false | `test_ac_2_3_filter_done_false` | Pass |\n| AC-2.4 invalid filter \u2192 422 | `test_ac_2_4_invalid_filter` (maybe/2/truthy) + edge probes | Pass |\n| AC-2.5 order by id ASC | `test_ac_2_5_ordered_by_id_asc` | Pass |\n\n### TODO-3 Mark done/undone \u2014 **PASS**\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-3.1 done=true | `test_ac_3_1_mark_done` | Pass |\n| AC-3.2 done=false | `test_ac_3_2_mark_undone` | Pass |\n| AC-3.3 idempotent | `test_ac_3_3_idempotent` | Pass |\n| AC-3.4 unknown id \u2192 404 JSON | `test_ac_3_4_unknown_id_404` | Pass |\n| AC-3.5 missing/non-bool done \u2192 422, unchanged | `test_ac_3_5_invalid_done_rejected`, `test_ac_3_5_extra_fields_do_not_edit_title` | Pass |\n| AC-3.6 reflected in list/filters | `test_ac_3_6_change_reflected_in_list_and_filters` | Pass |\n\n### TODO-4 Delete \u2014 **PASS**\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-4.1 204 empty body | `test_ac_4_1_delete_returns_204_no_body` | Pass |\n| AC-4.2 gone from GET | `test_ac_4_2_deleted_todo_gone` | Pass |\n| AC-4.3 unknown / double-delete \u2192 404; id not reused | `test_ac_4_3_*`, `test_deleted_id_not_reused` | Pass |\n\n### TODO-5 Health \u2014 **PASS**\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-5.1 200 `{\"status\":\"ok\"}` | `test_ac_5_1_health_returns_ok` | Pass |\n| AC-5.2 no params, no data change | `test_ac_5_2_health_needs_no_params_and_does_not_modify_data` | Pass |\n| AC-5.3 render healthCheckPath `/health` | `test_ac_5_3_render_health_check_path` | Pass |\n\n### TODO-6 Deployable to Render \u2014 **PASS** (AC-6.4 deferred)\n\n| AC | Covered by | Result |\n|---|---|---|\n| AC-6.1 Blueprint / deps / start command | `test_ac_6_1_render_build_and_start_commands` + file review | Pass |\n| AC-6.2 binds `$PORT` | startCommand in `render.yaml` asserts `--port $PORT` | Pass |\n| AC-6.3 `DB_PATH` env + schema on startup | `test_ac_6_3_db_path_env_and_schema_created_on_startup` | Pass |\n| AC-6.4 live public `/health` | \u2014 | **Deferred** until deployment |\n\n### TODO-7 Automated test suite \u2014 **PASS**\n\n| AC | Evidence | Result |\n|---|---|---|\n| AC-7.1 pytest from repo root, no external services | Ran successfully | Pass |\n| AC-7.2 isolated temp SQLite | `conftest.py` + `test_ac_7_2_tests_use_isolated_db` | Pass |\n| AC-7.3 every AC in TODO-1..5 has \u22651 test | Matrix above | Pass |\n| AC-7.4 all tests pass | 46/46 | Pass |\n\n## 5. Edge-case probe results (`tester/test_edge_cases.py`)\n\n| Probe | Expected | Actual | OK? |\n|---|---|---|---|\n| Missing / empty / whitespace title | 422, list empty | 422 | Yes |\n| Wrong-type title (int/bool/list) | 422 | 422 | Yes |\n| Extra fields on create | ignored; done=false; server id | as expected | Yes |\n| Title length 200 / 201 | 201 / 422 | 201 / 422 | Yes |\n| Title 200 after trim of padded input | 201 | 201 | Yes |\n| PATCH/DELETE unknown id | 404 `{\"detail\":\"Todo not found\"}` | 404 | Yes |\n| Malformed ids (`abc`, `1.5`) | 422 | 422 | Yes |\n| Negative id (`-1`) | 404 (parses as int, not found) | 404 | Yes (acceptable) |\n| `done=true/false` filters | correct subsets | correct | Yes |\n| Invalid filters (`maybe`, `2`, `truthy`, \u2026) | 422 | 422 | Yes |\n| FastAPI bool aliases (`1/0/yes/no/on/off`, also `y/n`) | 200 (design-documented for first set) | 200 | Yes / noted |\n| Empty `done=` query | 422 (bool_parsing) | 422 | Yes |\n| PATCH `{}` / string/int `done` | 422, todo unchanged | 422 | Yes |\n| `due_date: null` and past date | 201 | 201 | Yes |\n| `GET /todos/{id}` (not in API) | 405 Method Not Allowed | 405 | Expected (out of scope) |\n| `render.yaml` conventions | matches design | matches | Yes |\n| Module-level `app = create_app()` | present | present | Yes |\n\n**Edge suite:** 23 passed.\n\n## 6. `render.yaml` review\n\n| Check | Status |\n|---|---|\n| `type: web`, `runtime: python`, `plan: free` | OK |\n| `buildCommand: pip install -r requirements.txt` | OK |\n| `startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT` | OK (AC-6.2) |\n| `healthCheckPath: /health` | OK (AC-5.3) |\n| `PYTHON_VERSION: 3.11.11` | OK (matches design pin) |\n| `DB_PATH: /tmp/todos.db` (ephemeral free plan) | OK (Q2 accepted) |\n| Commented paid-disk upgrade path | OK |\n| `autoDeploy: true` | OK |\n| Module-level `app` for uvicorn target | OK (`app/main.py`) |\n\nAligns with `design.md` \u00a78 and Render Blueprint conventions. No defects.\n\n## 7. Defects\n\n**None blocking.** Informational notes only (not failures):\n\n| ID | Severity | Title | Notes |\n|---|---|---|---|\n| N1 | trivial | FastAPI accepts `y`/`n` for `done` query | Broader than the design's documented alias list (`true/false/1/0/yes/no/on/off`). Spec only requires invalid values like `maybe` \u2192 422, which holds. Optional follow-up: tighten query parsing or document `y`/`n`. |\n| N2 | trivial | `.gitignore` omits `.coverage` | Coverage run can leave an untracked file; tester cleaned it. Optional add `.coverage` / `htmlcov/`. |\n\nNo critical / major / minor product defects. AC-6.4 is deferred by agreement, not failed.\n\n## 8. Artifacts\n\n| Path | Description |\n|---|---|\n| `/workspace/ai-sdlc-studio/runs/5fa499f1-4bbe-46ac-8135-f1fb5834b0e0/test-report.md` | This report |\n| `.../tester/test_edge_cases.py` | Independent edge probes |\n| `.../tester/coverage.json` / `coverage_out.txt` | Coverage outputs |\n| `.../tester/edge_out.txt` | Edge probe log |\n| `.../tester/.venv-cov/` | Throwaway cov/edge venv (not part of app) |\n\n## 9. Recommendation\n\n**PASS testing.** Safe for Orchestrator to open the **release** gate when ready. Do **not** auto-start deployment from this stage (`stage_status` left `active`, no `request_approval`, no `done`).\n",
+      "created_by_bot": "orchestrator",
+      "created_at": "2026-11-09 10:29:11.346523"
+    },
+    {
+      "id": "77eb1e36-9110-4ade-a53c-e559a7ef1ce3",
+      "project_id": "5fa499f1-4bbe-46ac-8135-f1fb5834b0e0",
+      "kind": "release_notes",
+      "title": "Release notes",
+      "markdown": "# Tiny Todo API \u2014 Release\n\n- **Repository:** https://github.com/AryanSi12/tiny-todo\n- **Live:** https://tiny-todo-api.onrender.com\n- **Health:** https://tiny-todo-api.onrender.com/health\n\nPipeline complete end-to-end.\n",
+      "created_by_bot": "deployer",
+      "created_at": "2026-11-09 10:29:11.352529"
+    }
+  ],
+  "bots": [
+    {
+      "id": "orchestrator",
+      "name": "Orchestrator",
+      "role": "Manager",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "requirement_gatherer",
+      "name": "Requirement Gatherer",
+      "role": "Requirements",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "designer",
+      "name": "Designer",
+      "role": "Architecture",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "developer",
+      "name": "Developer",
+      "role": "Implementation",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "tester",
+      "name": "Tester",
+      "role": "QA",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "deployer",
+      "name": "Deployer",
+      "role": "Release",
+      "status": "idle",
+      "note": ""
+    },
+    {
+      "id": "maintainer",
+      "name": "Maintainer",
+      "role": "Existing repos",
+      "status": "idle",
+      "note": ""
+    }
+  ]
+}

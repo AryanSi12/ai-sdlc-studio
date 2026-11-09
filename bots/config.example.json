@@ -1,0 +1,4 @@
+{
+  "api_base": "https://YOUR-SERVICE.onrender.com",
+  "bot_token": "replace-with-BOT_TOKEN-from-Render-env"
+}

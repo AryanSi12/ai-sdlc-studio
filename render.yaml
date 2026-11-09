@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: ai-sdlc-studio
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: |
+      pip install -r requirements.txt
+      # frontend static should already be committed under backend/static
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-sdlc-db
+          property: connectionString
+      - key: BOT_TOKEN
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+
+databases:
+  - name: ai-sdlc-db
+    plan: free
+    databaseName: ai_sdlc
+    user: ai_sdlc

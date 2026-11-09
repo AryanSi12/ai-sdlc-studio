@@ -1,0 +1,32 @@
+# Dependencies & envs
+node_modules/
+.venv/
+venv/
+env/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.oxlintcache/
+# Build
+frontend/dist/
+*.egg-info/
+.coverage
+htmlcov/
+# Secrets & local state
+.env
+backend/.env
+bots/config.json
+*.db
+*.sqlite
+*.sqlite3
+backend/data/*.db
+# Runtime / local only
+runs/
+*.log
+.DS_Store
+# Editor
+.idea/
+.vscode/
+screenshots/
