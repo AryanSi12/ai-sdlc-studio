@@ -1,75 +1,60 @@
-from collections.abc import Generator
+"""MongoDB connection (pymongo). Uses mongomock when MONGODB_URI=mongomock://..."""
+from __future__ import annotations
 
-from sqlalchemy import create_engine, event, inspect, text
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from collections.abc import Generator
+from functools import lru_cache
+from typing import Any
+
+from pymongo import ASCENDING, DESCENDING, MongoClient
+from pymongo.database import Database
 
 from app.config import get_settings
 
-
-class Base(DeclarativeBase):
-    pass
+_client: MongoClient | None = None
 
 
-def _normalize_db_url(url: str) -> str:
-    # Render gives postgres:// or postgresql:// — SQLAlchemy 2 + psycopg3 wants postgresql+psycopg://
-    if url.startswith("postgres://"):
-        url = "postgresql://" + url[len("postgres://"):]
-    if url.startswith("postgresql://") and "+psycopg" not in url:
-        url = "postgresql+psycopg://" + url[len("postgresql://"):]
-    return url
+def _make_client(uri: str) -> MongoClient:
+    if uri.startswith("mongomock://"):
+        import mongomock
+
+        return mongomock.MongoClient()
+    return MongoClient(uri)
 
 
-def _make_engine():
+@lru_cache
+def get_client() -> MongoClient:
     settings = get_settings()
-    url = _normalize_db_url(settings.database_url)
-    connect_args = {}
-    if url.startswith("sqlite"):
-        connect_args["check_same_thread"] = False
-    engine = create_engine(url, connect_args=connect_args, future=True)
-
-    if url.startswith("sqlite"):
-
-        @event.listens_for(engine, "connect")
-        def _set_sqlite_pragma(dbapi_connection, _connection_record):
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA foreign_keys=ON")
-            cursor.close()
-
-    return engine
+    uri = settings.mongodb_uri
+    return _make_client(uri)
 
 
-engine = _make_engine()
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, future=True)
+def get_db() -> Generator[Database, None, None]:
+    client = get_client()
+    db_name = get_settings().mongodb_db_name
+    yield client[db_name]
 
 
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def _sqlite_add_column_if_missing(table: str, column: str, ddl: str) -> None:
-    if not str(engine.url).startswith("sqlite"):
-        return
-    insp = inspect(engine)
-    if table not in insp.get_table_names():
-        return
-    cols = {c["name"] for c in insp.get_columns(table)}
-    if column in cols:
-        return
-    with engine.begin() as conn:
-        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {ddl}"))
-
-
-def migrate_schema() -> None:
-    """Safe additive migrations for existing DBs (create_all does not ALTER)."""
-    _sqlite_add_column_if_missing("projects", "quiz_complete", "quiz_complete BOOLEAN DEFAULT 0")
+def get_database() -> Database:
+    return get_client()[get_settings().mongodb_db_name]
 
 
 def init_db() -> None:
-    from app import models  # noqa: F401
+    db = get_database()
+    # Indexes
+    db.projects.create_index([("updated_at", DESCENDING)])
+    db.stages.create_index([("project_id", ASCENDING), ("name", ASCENDING)], unique=True)
+    db.approvals.create_index([("project_id", ASCENDING), ("status", ASCENDING)])
+    db.events.create_index([("project_id", ASCENDING), ("created_at", DESCENDING)])
+    db.events.create_index([("bot", ASCENDING)])
+    db.quiz_rounds.create_index([("project_id", ASCENDING), ("round_number", DESCENDING)])
+    db.quiz_questions.create_index([("round_id", ASCENDING), ("sort_order", ASCENDING)])
+    db.quiz_answers.create_index([("round_id", ASCENDING)])
+    db.documents.create_index([("project_id", ASCENDING), ("kind", ASCENDING)])
+    db.bots.create_index([("id", ASCENDING)], unique=True)
 
-    Base.metadata.create_all(bind=engine)
-    migrate_schema()
+
+def reset_client_cache() -> None:
+    """For tests — clear cached client after env change."""
+    global _client
+    get_client.cache_clear()
+    _client = None

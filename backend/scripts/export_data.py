@@ -1,71 +1,49 @@
 #!/usr/bin/env python3
-"""Export all (or one) projects from the live DB to JSON."""
+"""Export projects (+ related) from local Mongo to JSON."""
 from __future__ import annotations
 
 import argparse
 import json
-import sqlite3
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_DB = ROOT / "ai_sdlc.db"
+sys.path.insert(0, str(ROOT))
 
 
-def rows(cur, sql, args=()):
-    cur.execute(sql, args)
-    cols = [c[0] for c in cur.description]
-    return [dict(zip(cols, r)) for r in cur.fetchall()]
+def default(o):
+    if isinstance(o, datetime):
+        return o.isoformat()
+    raise TypeError(type(o))
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Export AI SDLC Studio DB to JSON")
-    p.add_argument("--db", default=str(DEFAULT_DB))
-    p.add_argument("--project-id", default=None, help="Export only this project")
-    p.add_argument("-o", "--output", required=True)
+    p = argparse.ArgumentParser()
+    p.add_argument("--out", required=True)
+    p.add_argument("--project-id", default=None)
     args = p.parse_args()
+    from app.database import get_database, init_db
 
-    db = Path(args.db)
-    if not db.exists():
-        print(f"DB not found: {db}", file=sys.stderr)
-        return 1
-
-    conn = sqlite3.connect(db)
-    cur = conn.cursor()
-    if args.project_id:
-        projects = rows(cur, "SELECT * FROM projects WHERE id=?", (args.project_id,))
-        if not projects:
-            print(f"Project not found: {args.project_id}", file=sys.stderr)
-            return 1
-        pids = [args.project_id]
-    else:
-        projects = rows(cur, "SELECT * FROM projects")
-        pids = [x["id"] for x in projects]
-
+    init_db()
+    db = get_database()
+    q = {"id": args.project_id} if args.project_id else {}
+    projects = list(db.projects.find(q, {"_id": 0}))
+    pids = [p["id"] for p in projects]
     payload = {
-        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "exported_at": datetime.utcnow().isoformat() + "Z",
         "projects": projects,
-        "stages": [],
-        "approvals": [],
-        "events": [],
-        "documents": [],
-        "bots": rows(cur, "SELECT * FROM bots"),
+        "stages": list(db.stages.find({"project_id": {"$in": pids}}, {"_id": 0})) if pids else [],
+        "approvals": list(db.approvals.find({"project_id": {"$in": pids}}, {"_id": 0})) if pids else [],
+        "events": list(db.events.find({"project_id": {"$in": pids}}, {"_id": 0})) if pids else [],
+        "documents": list(db.documents.find({"project_id": {"$in": pids}}, {"_id": 0})) if pids else [],
+        "bots": list(db.bots.find({}, {"_id": 0})),
+        "quiz_rounds": list(db.quiz_rounds.find({"project_id": {"$in": pids}}, {"_id": 0})) if pids else [],
+        "quiz_questions": [],
+        "quiz_answers": [],
     }
-    for pid in pids:
-        payload["stages"].extend(rows(cur, "SELECT * FROM stages WHERE project_id=?", (pid,)))
-        payload["approvals"].extend(rows(cur, "SELECT * FROM approvals WHERE project_id=?", (pid,)))
-        payload["events"].extend(rows(cur, "SELECT * FROM events WHERE project_id=?", (pid,)))
-        try:
-            payload.setdefault("documents", []).extend(rows(cur, "SELECT * FROM documents WHERE project_id=?", (pid,)))
-        except Exception:
-            pass
-    conn.close()
-
-    out = Path(args.output)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(payload, indent=2, default=str))
-    print(f"Wrote {out} ({len(projects)} projects, {len(payload['events'])} events)")
+    Path(args.out).write_text(json.dumps(payload, indent=2, default=default))
+    print(f"Wrote {args.out} ({len(projects)} projects, {len(payload['events'])} events)")
     return 0
 
 

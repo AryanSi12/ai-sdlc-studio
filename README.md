@@ -106,9 +106,13 @@ cd frontend && npm run build
 ![Project overview](docs/screenshots/03-project-overview.png)
 ![Inbox](docs/screenshots/06-inbox.png)
 
+## Database
+
+MongoDB via `MONGODB_URI` (local, Atlas, or Render env). Tests use `mongomock`.
+
 ## Hosted (Render)
 
-`render.yaml` deploys a Python web service (serves API + built UI from `backend/static`) and a free Postgres database. Free Postgres on Render expires after 30 days unless upgraded.
+`render.yaml` deploys a Python web service (serves API + built UI from `backend/static`) with `MONGODB_URI` (set manually; no managed Postgres). Prefer MongoDB Atlas free tier.
 
 
 ## Frontend on Vercel (Phase 2)
