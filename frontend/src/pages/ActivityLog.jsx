@@ -5,12 +5,14 @@ import { BOTS, botById, formatTime, botColorClasses } from '../data/constants'
 import { listEvents } from '../lib/api'
 import { PageSkeleton } from '../components/Skeleton'
 import EmptyState from '../components/EmptyState'
+import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 
 export default function ActivityLog() {
   const [botFilter, setBotFilter] = useState('all')
   const [events, setEvents] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const reduced = usePrefersReducedMotion()
 
   useEffect(() => {
     let cancelled = false
@@ -32,12 +34,16 @@ export default function ActivityLog() {
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Activity</h1>
-          <p className="mt-1 text-sm text-slate-500">Audit trail across all projects.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Activity</h1>
+          <p className="mt-1 text-sm text-zinc-500">Audit trail across all projects.</p>
         </div>
-        <select id="bot-filter" value={botFilter} onChange={(e) => setBotFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
-          aria-label="Filter by bot">
+        <select
+          id="bot-filter"
+          value={botFilter}
+          onChange={(e) => setBotFilter(e.target.value)}
+          className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+          aria-label="Filter by bot"
+        >
           <option value="all">All bots</option>
           {BOTS.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
         </select>
@@ -47,23 +53,29 @@ export default function ActivityLog() {
       {loading ? <PageSkeleton /> : events.length === 0 ? (
         <EmptyState title="No events" description="Bot actions will show up here." action={<Link to="/" className="text-sm font-semibold text-indigo-600">Start a run →</Link>} />
       ) : (
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <ol className="relative ml-3 border-l border-slate-200">
+        <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <ol className="relative ml-3 border-l border-zinc-200">
             {events.map((ev, i) => {
               const bot = botById(ev.bot)
               const colors = botColorClasses[bot?.color || 'violet']
               return (
-                <motion.li key={ev.id} initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: Math.min(i, 10) * 0.03 }}
-                  className="relative pb-5 pl-6 last:pb-0">
+                <motion.li
+                  key={ev.id}
+                  initial={reduced ? false : { opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: Math.min(i, 10) * 0.03 }}
+                  className="relative pb-5 pl-6 last:pb-0"
+                >
                   <span className={`absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white ${colors.dot}`} />
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}>
-                      {bot?.emoji} {bot?.name}
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${colors.bg} ${colors.text} ${colors.border}`}>
+                      <img src={bot?.image} alt="" className="h-3.5 w-3.5 rounded" width={14} height={14} />
+                      {bot?.name}
                     </span>
                     <Link to={`/projects/${ev.project_id}`} className="text-xs font-medium text-indigo-600 hover:underline">{ev.project_name}</Link>
-                    <span className="ml-auto text-[11px] text-slate-400">{formatTime(ev.created_at)}</span>
+                    <span className="ml-auto text-[11px] text-zinc-400">{formatTime(ev.created_at)}</span>
                   </div>
-                  <div className="mt-1.5 text-sm font-medium text-slate-900">{ev.action}</div>
+                  <div className="mt-1.5 text-sm font-medium text-zinc-900">{ev.action}</div>
                 </motion.li>
               )
             })}

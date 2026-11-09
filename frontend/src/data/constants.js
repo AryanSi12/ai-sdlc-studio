@@ -1,11 +1,74 @@
 export const BOTS = [
-  { id: 'orchestrator', name: 'Orchestrator', role: 'Manager', color: 'violet', emoji: '🎯' },
-  { id: 'requirement_gatherer', name: 'Requirement Gatherer', role: 'Requirements', color: 'sky', emoji: '📋' },
-  { id: 'designer', name: 'Designer', role: 'Architecture', color: 'fuchsia', emoji: '✏️' },
-  { id: 'developer', name: 'Developer', role: 'Implementation', color: 'emerald', emoji: '💻' },
-  { id: 'tester', name: 'Tester', role: 'QA', color: 'amber', emoji: '🧪' },
-  { id: 'deployer', name: 'Deployer', role: 'Release', color: 'rose', emoji: '🚀' },
-  { id: 'maintainer', name: 'Maintainer', role: 'Existing repos', color: 'cyan', emoji: '🔧' },
+  {
+    id: 'orchestrator',
+    name: 'Orchestrator',
+    role: 'Manager',
+    color: 'violet',
+    hex: '#7c3aed',
+    emoji: '🎯',
+    image: '/bots/orchestrator.svg',
+    blurb: 'Routes work across specialists, opens approval gates, and keeps the pipeline moving.',
+  },
+  {
+    id: 'requirement_gatherer',
+    name: 'Requirement Gatherer',
+    role: 'Requirements',
+    color: 'sky',
+    hex: '#0284c7',
+    emoji: '📋',
+    image: '/bots/requirement_gatherer.svg',
+    blurb: 'Turns ideas into crisp requirements — quizzes you, then drafts the PRD.',
+  },
+  {
+    id: 'designer',
+    name: 'Designer',
+    role: 'Architecture',
+    color: 'fuchsia',
+    hex: '#c026d3',
+    emoji: '✏️',
+    image: '/bots/designer.svg',
+    blurb: 'Shapes architecture, APIs, and UX flows. Pauses for your design approval.',
+  },
+  {
+    id: 'developer',
+    name: 'Developer',
+    role: 'Implementation',
+    color: 'emerald',
+    hex: '#059669',
+    emoji: '💻',
+    image: '/bots/developer.svg',
+    blurb: 'Implements the design into code and opens pull requests.',
+  },
+  {
+    id: 'tester',
+    name: 'Tester',
+    role: 'QA',
+    color: 'amber',
+    hex: '#d97706',
+    emoji: '🧪',
+    image: '/bots/tester.svg',
+    blurb: 'Runs tests and loops failures back to Development until green.',
+  },
+  {
+    id: 'deployer',
+    name: 'Deployer',
+    role: 'Release',
+    color: 'rose',
+    hex: '#e11d48',
+    emoji: '🚀',
+    image: '/bots/deployer.svg',
+    blurb: 'Ships to production after your release approval — live URL ready.',
+  },
+  {
+    id: 'maintainer',
+    name: 'Maintainer',
+    role: 'Existing repos',
+    color: 'cyan',
+    hex: '#0891b2',
+    emoji: '🔧',
+    image: '/bots/maintainer.svg',
+    blurb: 'Scans existing repos first — health, issues, then hands off into the pipeline.',
+  },
 ]
 
 export const STAGES = ['Requirements', 'Design', 'Development', 'Testing', 'Deployment']
@@ -16,6 +79,14 @@ export const STAGE_UI = {
   development: 'Development',
   testing: 'Testing',
   deployment: 'Deployment',
+}
+
+export const STAGE_BOT = {
+  requirements: 'requirement_gatherer',
+  design: 'designer',
+  development: 'developer',
+  testing: 'tester',
+  deployment: 'deployer',
 }
 
 export const botColorClasses = {
@@ -34,7 +105,10 @@ export function botById(id) {
     name: id,
     role: '',
     color: 'violet',
+    hex: '#7c3aed',
     emoji: '🤖',
+    image: '/bots/orchestrator.svg',
+    blurb: '',
   }
 }
 
